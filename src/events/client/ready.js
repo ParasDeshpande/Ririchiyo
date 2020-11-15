@@ -23,6 +23,6 @@ module.exports = class ReadyEvent extends BaseEvent {
             client.user.setActivity(clientData.activity.normal.status, { type: clientData.activity.normal.type });
         }
 
-        console.info(`Logged in on discord as ${client.user.tag}`);
+        console.log(`Logged in on discord as ${client.user.tag}`);
     }
 }

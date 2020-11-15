@@ -28,7 +28,7 @@ module.exports = class Database {
                 playlists: connection.collection("playlists")
             };
             this.connection = connection;
-            console.log("Connected to the Database");
+            console.log(`Database connected: ${databaseName}`);
             return connection;
         } catch {
             throw new Error("Could not connect to the database");

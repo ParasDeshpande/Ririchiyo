@@ -87,10 +87,13 @@ class Spotify extends erela_js_1.Plugin {
             const { data: album } = yield axios_1.default.get(`${BASE_URL}/albums/${id}`, this.options);
             const tracks = album.tracks.items.map(item => Spotify.convertToUnresolved(item));
             let next = album.tracks.next;
+            const nexts = [];
             while (next) {
                 const { data: nextPage } = yield axios_1.default.get(album.tracks.next, this.options);
                 tracks.push(...nextPage.items.map(item => Spotify.convertToUnresolved(item)));
                 next = nextPage.next;
+                if (nexts.includes(next)) break;
+                else nexts.push(next);
             }
             return {
                 tracks,
@@ -104,10 +107,13 @@ class Spotify extends erela_js_1.Plugin {
             let { data: playlist } = yield axios_1.default.get(`${BASE_URL}/playlists/${id}`, this.options);
             const tracks = playlist.tracks.items.map(item => Spotify.convertToUnresolved(item.track));
             let next = playlist.tracks.next;
+            const nexts = [];
             while (next !== null) {
                 const { data: nextPage } = yield axios_1.default.get(playlist.tracks.next, this.options);
                 tracks.push(...nextPage.items.map(item => Spotify.convertToUnresolved(item.track)));
                 next = nextPage.next;
+                if (nexts.includes(next)) break;
+                else nexts.push(next);
             }
             return {
                 tracks,
