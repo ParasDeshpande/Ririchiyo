@@ -1,0 +1,22 @@
+{
+  "name": "ririchiyo",
+  "version": "0.0.0",
+  "description": "A easy to use discord music bot",
+  "main": "src/main/shardingManager.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Paras Deshpande",
+  "license": "MIT",
+  "dependencies": {
+    "@ksoft/api": "^3.1.9",
+    "axios": "^0.21.0",
+    "common-tags": "^1.8.0",
+    "discord-paginationembed": "^2.1.0",
+    "discord.js": "^12.4.1",
+    "dot-prop": "^6.0.0",
+    "mongodb": "^3.6.2",
+    "ms": "^2.1.2",
+    "vultrex.haste": "^1.0.1"
+  }
+}
