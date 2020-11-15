@@ -11,9 +11,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-const erela_js_1 = require("./index");
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Spotify = void 0;
+const erela_js_1 = require("../src/index");
 const axios_1 = __importDefault(require("axios"));
-const TEMPLATE = ["clientID", "clientSecret"];
 const BASE_URL = "https://api.spotify.com/v1";
 const REGEX = /(?:https:\/\/open\.spotify\.com\/|spotify:)(.+)(?:[\/:])([A-Za-z0-9]+)/;
 const buildSearch = (loadType, tracks, error, name, uri) => ({
@@ -23,23 +24,37 @@ const buildSearch = (loadType, tracks, error, name, uri) => ({
         name,
         duration: tracks.reduce((acc, cur) => acc + (cur.duration || 0), 0),
         uri: uri
-
     } : null,
     exception: error ? {
         message: error,
         severity: "COMMON"
     } : null,
 });
+const check = (options) => {
+    if (!options)
+        throw new TypeError("SpotifyOptions must not be empty.");
+    if (typeof options.clientID !== "string" || !/^.+$/.test(options.clientID))
+        throw new TypeError('Spotify option "clientID" must be present and be a non-empty string.');
+    if (typeof options.clientSecret !== "string" || !/^.+$/.test(options.clientSecret))
+        throw new TypeError('Spotify option "clientSecret" must be a non-empty string.');
+    if (typeof options.convertUnresolved !== "undefined" &&
+        typeof options.convertUnresolved !== "boolean")
+        throw new TypeError('Spotify option "convertUnresolved" must be a boolean.');
+    if (typeof options.playlistLimit !== "undefined" &&
+        typeof options.playlistLimit !== "number")
+        throw new TypeError('Spotify option "playlistLimit" must be a number.');
+    if (typeof options.albumLimit !== "undefined" &&
+        typeof options.albumLimit !== "number")
+        throw new TypeError('Spotify option "albumLimit" must be a number.');
+};
 class Spotify extends erela_js_1.Plugin {
     constructor(options) {
-        if (!options || !TEMPLATE.every(t => t in options && typeof options[t] === "string"))
-            throw new RangeError('"options" is not an object or does not contain properties "clientID" and "clientSecret" of type "string".');
         super();
-        this.clientID = options.clientID;
-        this.clientSecret = options.clientSecret;
-        this.authorization = Buffer.from(`${this.clientID}:${this.clientSecret}`).toString("base64");
+        check(options);
+        this.options = Object.assign({}, options);
         this.token = "";
-        this.options = {
+        this.authorization = Buffer.from(`${this.options.clientID}:${this.options.clientSecret}`).toString("base64");
+        this.axiosOptions = {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.token
@@ -69,10 +84,15 @@ class Spotify extends erela_js_1.Plugin {
                         const data = yield func(id);
                         const loadType = type === "track" ? "TRACK_LOADED" : "PLAYLIST_LOADED";
                         const name = ["playlist", "album"].includes(type) ? data.name : null;
-                        const tracks = data.tracks.map(track => erela_js_1.TrackUtils.buildUnresolved(track, requester));
-                        return buildSearch(loadType, type === "track" ? tracks[0] : tracks, null, name, data.uri);
+                        const tracks = data.tracks.map(query => {
+                            const track = erela_js_1.TrackUtils.buildUnresolved(query, requester);
+                            if (this.options.convertUnresolved)
+                                track.resolve();
+                            return track;
+                        });
+                        return buildSearch(loadType, tracks, null, name, data.uri);
                     }
-                    const msg = 'Incorrect type for Spotify URL, must be one of "track", "album", "playlist".';
+                    const msg = 'Incorrect type for Spotify URL, must be one of "track", "album" or "playlist".';
                     return buildSearch("LOAD_FAILED", null, msg, null);
                 }
                 catch (e) {
@@ -84,36 +104,28 @@ class Spotify extends erela_js_1.Plugin {
     }
     getAlbumTracks(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { data: album } = yield axios_1.default.get(`${BASE_URL}/albums/${id}`, this.options);
+            const { data: album } = yield axios_1.default.get(`${BASE_URL}/albums/${id}`, this.axiosOptions);
             const tracks = album.tracks.items.map(item => Spotify.convertToUnresolved(item));
-            let next = album.tracks.next;
-            const nexts = [];
-            while (next) {
-                const { data: nextPage } = yield axios_1.default.get(album.tracks.next, this.options);
+            let next = album.tracks.next, page = 1;
+            while (next && !this.options.playlistLimit ? true : page < this.options.albumLimit) {
+                const { data: nextPage } = yield axios_1.default.get(next, this.axiosOptions);
                 tracks.push(...nextPage.items.map(item => Spotify.convertToUnresolved(item)));
                 next = nextPage.next;
-                if (nexts.includes(next)) break;
-                else nexts.push(next);
+                page++;
             }
-            return {
-                tracks,
-                name: album.name,
-                uri: album.external_urls.spotify
-            };
+            return { tracks, name: album.name };
         });
     }
     getPlaylistTracks(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            let { data: playlist } = yield axios_1.default.get(`${BASE_URL}/playlists/${id}`, this.options);
+            let { data: playlist } = yield axios_1.default.get(`${BASE_URL}/playlists/${id}`, this.axiosOptions);
             const tracks = playlist.tracks.items.map(item => Spotify.convertToUnresolved(item.track));
-            let next = playlist.tracks.next;
-            const nexts = [];
-            while (next !== null) {
-                const { data: nextPage } = yield axios_1.default.get(playlist.tracks.next, this.options);
+            let next = playlist.tracks.next, page = 1;
+            while (next && !this.options.playlistLimit ? true : page < this.options.playlistLimit) {
+                const { data: nextPage } = yield axios_1.default.get(next, this.axiosOptions);
                 tracks.push(...nextPage.items.map(item => Spotify.convertToUnresolved(item.track)));
                 next = nextPage.next;
-                if (nexts.includes(next)) break;
-                else nexts.push(next);
+                page++;
             }
             return {
                 tracks,
@@ -124,7 +136,7 @@ class Spotify extends erela_js_1.Plugin {
     }
     getTrack(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { data } = yield axios_1.default.get(`${BASE_URL}/tracks/${id}`, this.options);
+            const { data } = yield axios_1.default.get(`${BASE_URL}/tracks/${id}`, this.axiosOptions);
             const track = Spotify.convertToUnresolved(data);
             return {
                 tracks: [track],
@@ -145,7 +157,7 @@ class Spotify extends erela_js_1.Plugin {
             throw new TypeError(`The track name must be a string, received type ${typeof track.name}`);
         return {
             title: track.name,
-            artist: track.artists[0].name,
+            author: track.artists[0].name,
             duration: track.duration_ms,
             uri: track.external_urls.spotify
         };
@@ -161,7 +173,7 @@ class Spotify extends erela_js_1.Plugin {
             if (!access_token)
                 throw new Error("Invalid Spotify client.");
             this.token = `Bearer ${access_token}`;
-            this.options.headers.Authorization = this.token;
+            this.axiosOptions.headers.Authorization = this.token;
             return expires_in * 1000;
         });
     }

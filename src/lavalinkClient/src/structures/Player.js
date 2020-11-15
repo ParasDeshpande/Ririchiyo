@@ -138,7 +138,7 @@ class Player {
             times: 0,
             player: this,
             run: async function () {
-                if (!(this.player.guildData.settings.music["24/7"] && this.player.guildData.settings.premium.enabled))
+                if (!this.stop && !(this.player.guildData.settings.music["24/7"] && this.player.guildData.settings.premium.enabled))
                     if (!this.player.playing || this.player.voiceChannel.members.filter(member => !member.user.bot).size < 1)
                         if (this.times > 1) this.player.manager.emit("playerInactivity", this.player);
                         else ++this.times;

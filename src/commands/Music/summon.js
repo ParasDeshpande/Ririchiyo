@@ -48,7 +48,7 @@ module.exports = class SummonCommand extends BaseCommand {
         });
 
         //apply guild settings to player
-        switch (guildData.settings.music.loop.value) {
+        switch (guildData.settings.music.loop) {
             case "q": message.guild.player.setQueueRepeat(true);
                 break;
             case "t": message.guild.player.setTrackRepeat(true);

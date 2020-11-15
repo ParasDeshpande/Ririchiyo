@@ -1,7 +1,4 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
-const Database = require('../../database/Database');
-const credentials = require('../../../config/credentials.json');
-const database = new Database(credentials.mongodb.uri);
 
 module.exports = class ReadyEvent extends BaseEvent {
     constructor() {
@@ -9,11 +6,7 @@ module.exports = class ReadyEvent extends BaseEvent {
     }
 
     async run(client) {
-        await database.connect(credentials.mongodb.database);
-        const clientData = await database.getClient(client.user.id);
-
-        client.db = database;
-
+        const clientData = await client.db.getClient(client.user.id);
         await client.lavalinkClient.init(client);
 
         if (clientData.activity.devMode.enabled) {
@@ -23,6 +16,6 @@ module.exports = class ReadyEvent extends BaseEvent {
             client.user.setActivity(clientData.activity.normal.status, { type: clientData.activity.normal.type });
         }
 
-        console.log(`Logged in on discord as ${client.user.tag}`);
+        console.log(`Discord connected: ${client.user.tag}`);
     }
 }
