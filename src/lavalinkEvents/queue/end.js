@@ -11,7 +11,7 @@ module.exports = class QueueEndEvent extends BaseEvent {
             delete player.playingMessage;
         }
 
-        player.textChannel.send(this.embedify(player.guild, "The music queue has ended."));
+        await player.textChannel.send(this.embedify(player.guild, "The music queue has ended."));
         player.stop();
     }
 }

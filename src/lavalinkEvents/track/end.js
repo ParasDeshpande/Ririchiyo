@@ -6,10 +6,6 @@ module.exports = class TrackEndEvent extends BaseEvent {
     }
 
     async run(manager, player, track, event) {
-        if (player.playingMessage && !player.playingMessage.deleted) {
-            await player.playingMessage.delete().catch(console.error);
-            delete player.playingMessage;
-        }
         if (event.reason !== "STOPPED") player.previousTracks.unshift(track);
     }
 }

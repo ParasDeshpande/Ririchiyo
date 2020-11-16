@@ -18,7 +18,7 @@ module.exports = class LoopCommand extends BaseCommand {
         const result = await musicUtil.canModifyPlayer({ message, requiredPerms: "MANAGE_PLAYER", errorEmbed: true, noPlayer: true });
         if (result.error) return;
 
-        switch (result.player ? result.player.loopType : guildData.settings.music.loop) {
+        switch (args ? parseOptions(args[0]) : (result.player ? result.player.loopType : guildData.settings.music.loop)) {
             default:
                 if (result.player) result.player.setQueueRepeat(true);
                 if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "q";
@@ -38,5 +38,32 @@ module.exports = class LoopCommand extends BaseCommand {
 
         await message.channel.send(this.embedify(message.guild, `${message.author} Set the loop to ${(result.player ? result.player.loopType : guildData.settings.music.loop) == "d" ? "disabled" : ((result.player ? result.player.loopType : guildData.settings.music.loop) == "t" ? "track" : "queue")}.`));
         if (result.player && message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Set the loop to ${(result.player ? result.player.loopType : guildData.settings.music.loop) == "d" ? "disabled" : ((result.player ? result.player.loopType : guildData.settings.music.loop) == "t" ? "track" : "queue")}.`));
+    }
+}
+
+function parseOptions(args) {
+    switch (args) {
+        case "d":
+        case "disable":
+        case "stop":
+        case "off":
+        case "no":
+            return "t";
+        case "t":
+        case "track":
+        case "song":
+        case "this":
+        case "current":
+        case "one":
+        case "playing":
+            return "q";
+        case "q":
+        case "queue":
+        case "entire":
+        case "all":
+        case "playlist":
+        case "everything":
+            return "d";
+        default: return;
     }
 }
