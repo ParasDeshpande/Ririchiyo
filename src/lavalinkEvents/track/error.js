@@ -6,6 +6,6 @@ module.exports = class TrackErrorEvent extends BaseEvent {
     }
 
     async run(manager, player, track, error) {
-        console.log(error);
+        manager
     }
 }

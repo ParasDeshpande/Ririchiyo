@@ -7,7 +7,7 @@ const UserMusic = require('./util/UserMusic');
 module.exports = class UserData {
     constructor(usersCollection, fetchedData, dbFunctions) {
         const data = deepMerge(defaultData, fetchedData);
-        this.premium = new UserPremium(usersCollection, data.premium, data._id);
+        this.premium = new UserPremium(usersCollection, data.premium, data._id, dbFunctions);
         this.nqn = new UserNQN(usersCollection, data.nqn, data._id);
         this.music = new UserMusic(usersCollection, data.music, data._id, dbFunctions);
     }

@@ -55,6 +55,7 @@ class Player {
         this.guild = options.guild;
         this.guildData = options.guildData;
         this.inactivityTimeout = options.inactivityTimeout;
+        this.nightcoreEnabled = false;
         this.loopType = "d";
         if (options.voiceChannel)
             this.voiceChannel = options.voiceChannel;
@@ -244,6 +245,41 @@ class Player {
             volume: this.volume,
         });
         return this;
+    }
+    /**
+     * Sets the player volume.
+     * @param volume default = 1
+     */
+    get nightcore() {
+        return this.nightcoreEnabled;
+    }
+    set nightcore(value) {
+        if (value === true) {
+            this.node.send({
+                op: "filters",
+                guildId: this.guild.id,
+                timescale: {
+                    "speed": 1.15,
+                    "pitch": 1.25,
+                    "rate": 1.05
+                },
+            });
+            this.nightcoreEnabled = true;
+            return this;
+        }
+        else {
+            this.node.send({
+                op: "filters",
+                guildId: this.guild.id,
+                timescale: {
+                    "speed": 1,
+                    "pitch": 1,
+                    "rate": 1
+                },
+            });
+            this.nightcoreEnabled = false;
+            return this;
+        }
     }
     /**
      * Sets the track repeat.

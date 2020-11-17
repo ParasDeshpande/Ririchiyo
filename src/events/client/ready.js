@@ -1,4 +1,5 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
+const { handleRestartData } = require('../../utils/util');
 
 module.exports = class ReadyEvent extends BaseEvent {
     constructor() {
@@ -8,6 +9,8 @@ module.exports = class ReadyEvent extends BaseEvent {
     async run(client) {
         const clientData = await client.db.getClient(client.user.id);
         await client.lavalinkClient.init(client);
+
+        await handleRestartData(client, clientData.restartData);
 
         if (clientData.activity.devMode.enabled) {
             client.user.setActivity(clientData.activity.devMode.status, { type: clientData.activity.devMode.type });

@@ -5,6 +5,8 @@ const GuildData = require('./structures/GuildData');
 const UserData = require('./structures/UserData');
 const ClientData = require('./structures/ClientData');
 const PlaylistData = require('./structures/PlaylistData');
+const PremiumTokenData = require('./structures/PremiumTokenData');
+const { ObjectId } = require('mongodb');
 
 module.exports = class Database {
     constructor(uri) {
@@ -13,7 +15,8 @@ module.exports = class Database {
             clients: new Collection(),
             users: new Collection(),
             guilds: new Collection(),
-            playlists: new Collection()
+            playlists: new Collection(),
+            premiumTokens: new Collection()
         }
     }
 
@@ -25,7 +28,8 @@ module.exports = class Database {
                 clients: connection.collection("clients"),
                 users: connection.collection("users"),
                 guilds: connection.collection("guilds"),
-                playlists: connection.collection("playlists")
+                playlists: connection.collection("playlists"),
+                premiumTokens: connection.collection("premiumTokens")
             };
             this.connection = connection;
             console.log(`Database connected: ${databaseName}`);
@@ -41,7 +45,7 @@ module.exports = class Database {
         if (cache) return cache;
         else {
             const fetchedData = await this.collections.guilds.findOne({ "_id": id }) || { "_id": id };
-            const guild = new GuildData(this.collections.guilds, fetchedData);
+            const guild = new GuildData(this.collections.guilds, fetchedData, this);
             this.cache.guilds.set(id, guild);
             return guild;
         }
@@ -81,6 +85,43 @@ module.exports = class Database {
             this.cache.clients.set(id, client);
             return client;
         }
+    }
+
+    async getPremiumToken(id) {
+        if (id) id = ObjectId(id);
+        if (!this.connection) throw new Error("Not connected to the database");
+        const cache = this.cache.premiumTokens.get(id);
+        if (cache) return cache;
+        else {
+            const fetchedData = await this.collections.premiumTokens.findOne({ "_id": id });
+            if (!fetchedData) return;
+            fetchedData._id = fetchedData._id.toString();
+            const premiumToken = new PremiumTokenData(this.collections.premiumTokens, fetchedData);
+            this.cache.premiumTokens.set(id, premiumToken);
+            return premiumToken;
+        }
+    }
+
+    async generatePremiumToken(purchasedByID, durationMs, giftable, allowedBoosts, additionalData) {
+        if (!this.connection) throw new Error("Not connected to the database");
+        const premiumToken = {
+            "giftable": giftable,
+            "renewals": [
+                {
+                    "renewedByID": purchasedByID,
+                    "renewedOn": Date.now(),
+                    "expiry": Date.now() + durationMs,
+                    "allowedBoosts": allowedBoosts,
+                    "additionalData": additionalData
+                }
+            ]
+        }
+        const inserted = await this.collections.premiumTokens.insertOne(premiumToken);
+        if (inserted && inserted.insertedId) {
+            premiumToken._id = inserted.insertedId.toString();
+            return new PremiumTokenData(this.collections.premiumTokens, premiumToken);
+        }
+        else return;
     }
 
 

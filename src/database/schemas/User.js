@@ -1,10 +1,7 @@
 module.exports = {
     "_id": undefined,
     "premium": {
-        "expires": undefined,
-        "token": undefined,
-        "allowedBoosts": undefined,
-        "boostedGuilds": []
+        "token": undefined
     },
     "nqn": {
         "subscribedPacks": [] //[ARRAY OF PACK IDs]

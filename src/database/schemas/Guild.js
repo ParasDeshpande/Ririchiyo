@@ -5,8 +5,7 @@ module.exports = {
     "settings": {
         "prefix": settings.client.commands.defaultPrefix,
         "premium": {
-            "boostedBy": undefined,
-            "expires": undefined
+            "token": undefined
         },
         "permissions": {
             "users": {},

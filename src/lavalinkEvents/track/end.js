@@ -6,6 +6,7 @@ module.exports = class TrackEndEvent extends BaseEvent {
     }
 
     async run(manager, player, track, event) {
+        console.log(event.reason)
         if (event.reason !== "STOPPED") player.previousTracks.unshift(track);
     }
 }

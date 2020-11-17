@@ -11,5 +11,11 @@ module.exports = {
             "type": settings.client.activity.devMode.type,
             "enabled": settings.client.activity.devMode.enabled
         }
+    },
+    "restartData": {
+        "wasRestarted": undefined,
+        "guild": undefined,
+        "channel": undefined,
+        "author": undefined
     }
 }

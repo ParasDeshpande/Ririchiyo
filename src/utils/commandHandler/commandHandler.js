@@ -21,7 +21,7 @@ module.exports = class CommandHandler extends CommandHandlerUtil {
 
         if (opts.editedEvent && !command.editedEvent) return;
 
-        message.author.permissions = await guildData.settings.permissions.users.getForUser(message.member.id).calculateOverwrites(await message.member.roles.cache.keyArray(), await message.channel.permissionsFor(message.member), userData.premium.enabled);
+        message.author.permissions = await guildData.settings.permissions.users.getForUser(message.member.id).calculateOverwrites(await message.member.roles.cache.keyArray(), await message.channel.permissionsFor(message.member), await userData.premium.checkIfEnabled());
 
         if (clientData.activity.devMode.enabled == true && !message.author.permissions.internal.final.has("BOT_OWNER")) return message.channel.send(this.embedify(message.guild, "The bot is currently in developer only mode, the bot commands are disabled for some time, they will be back soon... :/", true));
 

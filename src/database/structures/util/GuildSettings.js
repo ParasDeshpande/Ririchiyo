@@ -5,8 +5,8 @@ const MusicSettings = require("./MusicSettings");
 const settings = require('../../../../config/settings.json');
 
 module.exports = class GuildSettings {
-    constructor(db, settingsData, id) {
-        this.premium = new GuildPremium(db, settingsData.premium, id);
+    constructor(db, settingsData, id, dbFunctions) {
+        this.premium = new GuildPremium(db, settingsData.premium, id, dbFunctions);
         this.permissions = new GuildPermissions(db, settingsData.permissions, id);
         this.announcements = new AnnouncementSettings(db, settingsData.announcements, id);
         this.music = new MusicSettings(db, settingsData.music, id);

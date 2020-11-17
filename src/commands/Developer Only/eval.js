@@ -35,12 +35,12 @@ module.exports = class EvalCommand extends BaseCommand {
 
             if (typeof result !== "string") result = inspect(result);
 
-            if (message.channel.oldEvalMessage && editedEvent) return await message.channel.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalDisplayCode, result, execTime)));
-            else return message.channel.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalDisplayCode, result, execTime)));
+            if (message.oldEvalMessage && editedEvent) return await message.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalDisplayCode, result, execTime)));
+            else return message.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalDisplayCode, result, execTime)));
         }
         catch (err) {
-            if (message.channel.oldEvalMessage && editedEvent) return await message.channel.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalDisplayCode, err.message, null, true), true));
-            else return message.channel.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalDisplayCode, err.message, null, true), true));
+            if (message.oldEvalMessage && editedEvent) return await message.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalDisplayCode, err.message, null, true), true));
+            else return message.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalDisplayCode, err.message, null, true), true));
         }
     }
 }
