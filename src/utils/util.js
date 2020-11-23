@@ -58,7 +58,7 @@ async function handleRestartData(client, restartDataClass) {
 }
 
 async function updateDiscordBotsListStats(client, guilds, users, voiceConnections) {
-    const postURI = `https://discordbolist.com/api/v1/bots/${client.user.id}/stats/`;
+    const postURI = `https://discordbolist.com/api/v1/bots/:${client.user.id}/stats/`;
     const { response } = await axios.post(postURI, { guilds, users, voice_connections: voiceConnections }, { headers: { Authorization: commandUtil.credentials.discordbotslist.token } }).catch(error => { return error });
     if (!response) return false;
     if (!response.data) return false;

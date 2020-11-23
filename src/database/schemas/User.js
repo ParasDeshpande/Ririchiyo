@@ -1,5 +1,8 @@
 module.exports = {
     "_id": undefined,
+    "username": undefined,
+    "discriminator": undefined,
+    "avatar": undefined,
     "premium": {
         "token": undefined
     },
@@ -8,5 +11,6 @@ module.exports = {
     },
     "music": {
         "playlists": [] //[ARRAY OF PLAYLIST NAMES]
-    }
+    },
+    "guilds": [] //[ARRAY OF GUILD OBJECTS]
 }

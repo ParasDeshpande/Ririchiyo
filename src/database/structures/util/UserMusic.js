@@ -20,7 +20,7 @@ class UserPlaylists extends Array {
             if (indexOfFound < 0) return;
             else return this[indexOfFound];
         }
-        this.addNew = async function (name) {
+        this.getPlaylistWithName = async function (name) {
             const alreadyExists = await this.findWithName(name);
             if (!alreadyExists) {
                 const createdPlaylist = await dbFunctions.getPlaylist(userID, name);
