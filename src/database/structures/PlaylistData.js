@@ -23,7 +23,7 @@ module.exports = class Playlist {
 
 class PlaylistTracks extends Array {
     constructor(db, tracksArray, userID, name, playlistClass) {
-        super(...tracksArray);
+        super(...arguments[1] ? arguments[1] : arguments);
 
         this.add = async function (title, uri, duration) {
             const foundSameTrack = findIndexWithPropInArray(this, "uri", uri);
@@ -37,9 +37,18 @@ class PlaylistTracks extends Array {
 
         this.remove = async function (index) {
             const track = this.splice(index, 1);
-            const { upsertedId } = await db.updateOne({ userID, name }, { $pull: { "tracks": track } }, { upsert: true });
+            const { upsertedId } = await db.updateOne({ userID, name }, { $pull: { "tracks": { "uri": track.uri } } }, { upsert: true });
             if (!playlistClass.id && upsertedId && upsertedId._id) playlistClass.id = upsertedId._id;
-            return;
+            return track;
+        }
+
+        this.removeWithUrl = async function (uri) {
+            const foundSameTrack = findIndexWithPropInArray(this, "uri", uri);
+            if (foundSameTrack < 0) return;
+            const track = this.splice(foundSameTrack, 1);
+            const { upsertedId } = await db.updateOne({ userID, name }, { $pull: { "tracks": { "uri": uri } } }, { upsert: true });
+            if (!playlistClass.id && upsertedId && upsertedId._id) playlistClass.id = upsertedId._id;
+            return track[0];
         }
     }
 }

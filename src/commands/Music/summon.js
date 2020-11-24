@@ -44,6 +44,7 @@ module.exports = class SummonCommand extends BaseCommand {
             voiceChannel: authorVoiceChannel,
             textChannel: message.channel,
             selfDeafen: true,
+            guildDeaf: authorVoiceChannel.clientPermissions.has("DEAFEN_MEMBERS"),
             volume: (guildData.settings.music.volume.limit && guildData.settings.music.volume.value > 100) ? 100 : parseInt(guildData.settings.music.volume.value)
         });
 
@@ -87,16 +88,16 @@ module.exports = class SummonCommand extends BaseCommand {
         if (error) return { error: error };
 
         let errorEmbed = new this.discord.MessageEmbed().setColor(this.appearance.error.colour);
-        const permissions = authorVoiceChannel.permissionsFor(message.client.user);
-        if (!permissions.has("VIEW_CHANNEL")) {
+        authorVoiceChannel.clientPermissions = authorVoiceChannel.permissionsFor(message.client.user);
+        if (!authorVoiceChannel.clientPermissions.has("VIEW_CHANNEL")) {
             await message.channel.send(errorEmbed.setDescription("I don't have permissions to view your channel!"));
             return { error: { message: "NO_BOT_PERMS_VIEW_CHANNEL", code: 12 } }
         }
-        if (!permissions.has("CONNECT")) {
+        if (!authorVoiceChannel.clientPermissions.has("CONNECT")) {
             await message.channel.send(errorEmbed.setDescription("I don't have permissions to join your channel!"));
             return { error: { message: "NO_BOT_PERMS_CONNECT", code: 13 } }
         }
-        if (!permissions.has("SPEAK")) {
+        if (!authorVoiceChannel.clientPermissions.has("SPEAK")) {
             await message.channel.send(errorEmbed.setDescription("I don't have permissions to speak in your channel!"));
             return { error: { message: "NO_BOT_PERMS_SPEAK", code: 14 } }
         }

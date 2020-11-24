@@ -2,11 +2,11 @@ const BaseCommand = require('../../utils/structures/BaseCommand');
 const MusicUtil = require("../../lavalinkClient/musicUtil");
 const musicUtil = new MusicUtil;
 
-module.exports = class NowPlayingCommand extends BaseCommand {
+module.exports = class LikeCommand extends BaseCommand {
     constructor() {
         super({
             name: "like",
-            description: "View the current playing song",
+            description: "Like the current playing song",
             category: "music",
         })
     }

@@ -54,7 +54,11 @@ module.exports = class PlayCommand extends BaseCommand {
 
         const searchingMessage = await message.channel.send(searchingEmbed);
 
-        const res = await player.search(arg, message.author);
+        const requester = {
+            displayName: message.member.nickname ? message.member.nickname : message.author.username,
+            mention: `<@${message.author.id}>`
+        }
+        const res = await player.search(arg, requester);
 
         const addedTrack = res.loadType == "SEARCH_RESULT" ? res.tracks[0] : res.tracks;
 
@@ -68,12 +72,12 @@ module.exports = class PlayCommand extends BaseCommand {
         if (player.queue.length > 0) {
             switch (res.loadType) {
                 case "PLAYLIST_LOADED":
-                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(res.playlist.name)}](${res.playlist.uri}) \n(${addedTrack.length} Tracks)**\nAdded playlist to the queue by - ${addedTrack[0].requester}`);
+                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(res.playlist.name)}](${res.playlist.uri}) \n(${addedTrack.length} Tracks)**\n\`Added playlist to the queue by - \`${addedTrack[0].requester.mention}\` \``);
                     await searchingMessage.edit(queuedEmbed);
                     if (searchingMessage.channel.id != player.textChannel.id) player.textChannel.send(queuedEmbed);
                     break;
                 default:
-                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(addedTrack.title)}](${addedTrack.uri})**\nAdded track to the queue by - ${addedTrack.requester}`);
+                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(addedTrack.title)}](${addedTrack.uri})**\n\`Added track to the queue by - \`${addedTrack.requester.mention}\` \``);
                     await searchingMessage.edit(queuedEmbed);
                     if (searchingMessage.channel.id != player.textChannel.id) player.textChannel.send(queuedEmbed);
                     break;

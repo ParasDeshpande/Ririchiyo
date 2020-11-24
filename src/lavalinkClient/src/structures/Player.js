@@ -132,6 +132,7 @@ class Player {
                 self_deaf: this.options.selfDeafen || false,
             },
         });
+        if (this.options.guildDeaf) this.guild.me.voice.setDeaf(true);
         this.state = "CONNECTED";
 
         this.inactivityChecker = {

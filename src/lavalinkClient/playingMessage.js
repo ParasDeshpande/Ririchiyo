@@ -8,11 +8,10 @@ module.exports = class PlayingMessage extends MusicUtil {
     }
     update = async function ({ player, track }) {
         const playingMessageEmbed = new this.discord.MessageEmbed()
-            .setTitle("🎶 Started playing!")
-            .setDescription(`**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**`)
+            .setTitle(`🎶 Started playing! ${this.appearance.playerEmojis.playing.emoji}`)
+            .setDescription(`**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`${track.requester.mention}\` \``)
+            .setImage("https://cdn.discordapp.com/attachments/756541902202863740/780739509704327198/1920x1_TP.png")
             .setColor(this.getClientColour(player.guild))
-            .setImage(await track.displayThumbnail("mqdefault"))
-            .setFooter(`Added by- ${track.requester.username}`);
 
         if (player.playingMessage && !player.playingMessage.deleted) {
             await player.playingMessage.delete().catch(err => { if (err.message != 'Unknown Message') console.log(err) });
@@ -31,7 +30,7 @@ module.exports = class PlayingMessage extends MusicUtil {
              */
             const reactionOptions = [this.appearance.playerEmojis.like.id, this.appearance.playerEmojis.shuffle.id, this.appearance.playerEmojis.previous_track.id, this.appearance.playerEmojis.play_or_pause.id, this.appearance.playerEmojis.next_track.id, this.appearance.playerEmojis.loop.id, this.appearance.playerEmojis.stop.id, this.appearance.playerEmojis.disconnect.id];
 
-            const filter = (reaction, user, removedBy) => user.id !== player.client.user.id;
+            const filter = (reaction, user) => user.id !== player.client.user.id;
             player.playingMessage.collector = player.playingMessage.createReactionCollector(filter, { dispose: true });
 
             const playingMessageTemp = player.playingMessage;
@@ -80,22 +79,7 @@ module.exports = class PlayingMessage extends MusicUtil {
                         reaction.users.remove(user).catch(err => { if (err.message != 'Unknown Message') console.log(err) });
                         break;
                 }
-            }).on("remove", async (reaction, user) => {
-                console.log(reaction._emoji.name)
-                console.log(user.username)
-                return;
-                const permissions = reaction.message.channel.permissionsFor(reaction.client.user);
-                if (!permissions.has("SEND_MESSAGES")) return;
-                else if (!permissions.has("MANAGE_MESSAGES")) return player.playingMessage.channel.send(this.embedify(player.playingMessage.guild, "I don't have permissions to manage messages in this channel!\nThis permission is required for reaction messages to work correctly", true));
-                else if (!permissions.has("USE_EXTERNAL_EMOJIS")) return player.playingMessage.channel.send(this.embedify(player.playingMessage.guild, "I don't have permissions to use external emojis in this channel!\nThis permission is required for reaction messages to work correctly", true));
-                else if (!permissions.has("EMBED_LINKS")) return player.playingMessage.channel.send("I don't have permissions to embed links in this channel!");
-                let result;
-                switch (reaction.emoji.id) {
-                    case this.appearance.playerEmojis.like.id:
-                        result = await this.fakeMessageCommand(reaction, user, "unlike");
-                        break;
-                }
-            });
+            })
         }
     }
 

@@ -20,10 +20,9 @@ module.exports = class NowPlayingCommand extends BaseCommand {
 
         const nowPlayingEmbed = new this.discord.MessageEmbed()
             .setTitle(`${this.appearance.playerEmojis.musical_notes.emoji} Now playing! ${this.appearance.playerEmojis.playing.emoji}`)
-            .setDescription(`**[${this.discord.escapeMarkdown(result.player.queue.current.title)}](${result.player.queue.current.uri})**`)
+            .setDescription(`**[${this.discord.escapeMarkdown(result.player.queue.current.title)}](${result.player.queue.current.uri})**\n\`Added by- \`${result.player.queue.current.requester.mention}\` \``)
             .setColor(this.getClientColour(message.guild))
-            .setThumbnail(await result.player.queue.current.displayThumbnail("mqdefault"))
-            .setFooter(`Added by- ${result.player.queue.current.requester.username} • Volume- ${result.player.volume}% • Loop- ${(result.player ? result.player.loopType : guildData.settings.music.loop) == "d" ? "disabled" : ((result.player ? result.player.loopType : guildData.settings.music.loop) == "t" ? "track" : "queue")}`);
+            .setFooter(`Volume- ${result.player.volume}% • Loop- ${(result.player ? result.player.loopType : guildData.settings.music.loop) == "d" ? "disabled" : ((result.player ? result.player.loopType : guildData.settings.music.loop) == "t" ? "track" : "queue")}`);
 
         return await message.channel.send(nowPlayingEmbed).catch(console.error);
     }
