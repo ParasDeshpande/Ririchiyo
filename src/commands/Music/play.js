@@ -70,11 +70,9 @@ module.exports = class PlayCommand extends BaseCommand {
             return await searchingMessage.edit(this.embedify(player.guild, `An error occured while searching the track: \`${res.exception ? (res.exception.message ? res.exception.message : "UNKNOWN_ERROR") : "UNKNOWN_ERROR"}\``, true))
         }
 
-        const addedTrack = res.loadType == "SEARCH_RESULT" ? res.tracks[0] : res.tracks;
+        const addedTracks = res.loadType == "SEARCH_RESULT" ? [res.tracks[0]] : res.tracks;
 
-        if (!addedTrack) return searchingMessage.edit(this.embedify(message.guild, `Could not find any results for query "\`${arg}\`"`, true));
-
-        await player.queue.add(addedTrack);
+        await player.queue.add(addedTracks);
 
         const queuedEmbed = new this.discord.MessageEmbed()
             .setColor(this.getClientColour(message.guild));
@@ -82,12 +80,12 @@ module.exports = class PlayCommand extends BaseCommand {
         if (player.queue.length > 0) {
             switch (res.loadType) {
                 case "PLAYLIST_LOADED":
-                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(res.playlist.name)}](${res.playlist.uri}) \n(${addedTrack.length} Tracks)**\n\`Added playlist to the queue by - \`${addedTrack[0].requester.mention}\` \``);
+                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(res.playlist.name)}](${res.playlist.uri}) \n(${addedTracks.length} Tracks)**\n\`Added playlist to the queue by - \`${addedTracks[0].requester.mention}\` \``);
                     await searchingMessage.edit(queuedEmbed);
                     if (searchingMessage.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
                     break;
                 default:
-                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(addedTrack.title)}](${addedTrack.uri})**\n\`Added track to the queue by - \`${addedTrack.requester.mention}\` \``);
+                    queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(addedTracks[0].title)}](${addedTracks[0].uri})**\n\`Added track to the queue by - \`${addedTracks[0].requester.mention}\` \``);
                     await searchingMessage.edit(queuedEmbed);
                     if (searchingMessage.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
                     break;
