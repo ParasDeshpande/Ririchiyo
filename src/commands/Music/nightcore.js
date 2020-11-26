@@ -21,6 +21,6 @@ module.exports = class NightcoreCommand extends BaseCommand {
         result.player.nightcore = !result.player.nightcore;
 
         message.channel.send(this.embedify(message.guild, `${message.author} Set the nightcore mode to ${result.player.nightcore}!`));
-        if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Set the nightcore mode to ${result.player.nightcore}!`));
+        if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Set the nightcore mode to ${result.player.nightcore}!`));
     }
 }
