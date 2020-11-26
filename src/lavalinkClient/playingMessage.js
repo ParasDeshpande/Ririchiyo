@@ -11,13 +11,20 @@ module.exports = class PlayingMessage extends MusicUtil {
             .setTitle(`🎶 Started playing! ${this.appearance.playerEmojis.playing.emoji}`)
             .setDescription(`**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`${track.requester.mention}\` \``)
             .setImage("https://cdn.discordapp.com/attachments/756541902202863740/780739509704327198/1920x1_TP.png")
-            .setColor(this.getClientColour(player.guild))
+            .setColor(this.getClientColour(player.options.guildOBJ))
 
         if (player.playingMessage && !player.playingMessage.deleted) {
+            //if there's an error
+            if (player.playingMessage.error) return await player.playingMessage.delete().catch(err => { if (err.message != 'Unknown Message') console.log(err) });
+
             await player.playingMessage.delete().catch(err => { if (err.message != 'Unknown Message') console.log(err) });
-            player.playingMessage = await player.textChannel.send(playingMessageEmbed).catch(err => { if (err.message != 'Unknown Message') console.log(err) });
+
+            //if there's an error
+            if (player.playingMessage.error) return await player.playingMessage.delete().catch(err => { if (err.message != 'Unknown Message') console.log(err) });
+
+            player.playingMessage = await player.options.textChannelOBJ.send(playingMessageEmbed).catch(err => { if (err.message != 'Unknown Message') console.log(err) });
         }
-        else player.playingMessage = await player.textChannel.send(playingMessageEmbed).catch(err => { if (err.message != 'Unknown Message') console.log(err) });
+        else player.playingMessage = await player.options.textChannelOBJ.send(playingMessageEmbed).catch(err => { if (err.message != 'Unknown Message') console.log(err) });
 
         const permissions = player.playingMessage.channel.permissionsFor(player.playingMessage.client.user);
         if (!permissions.has("SEND_MESSAGES")) return;
@@ -30,11 +37,14 @@ module.exports = class PlayingMessage extends MusicUtil {
              */
             const reactionOptions = [this.appearance.playerEmojis.like.id, this.appearance.playerEmojis.shuffle.id, this.appearance.playerEmojis.previous_track.id, this.appearance.playerEmojis.play_or_pause.id, this.appearance.playerEmojis.next_track.id, this.appearance.playerEmojis.loop.id, this.appearance.playerEmojis.stop.id, this.appearance.playerEmojis.disconnect.id];
 
-            const filter = (reaction, user) => user.id !== player.client.user.id;
+            const filter = (reaction, user) => user.id !== user.client.user.id;
             player.playingMessage.collector = player.playingMessage.createReactionCollector(filter, { dispose: true });
 
             const playingMessageTemp = player.playingMessage;
             for (const option of reactionOptions) {
+                //if there's an error
+                if (playingMessageTemp && playingMessageTemp.error) return await playingMessageTemp.delete().catch(err => { if (err.message != 'Unknown Message') console.log(err) });
+
                 if (playingMessageTemp && !playingMessageTemp.deleted) await playingMessageTemp.react(option).catch(err => { if (err.message != 'Unknown Message') console.log(err) });
                 else return;
             }

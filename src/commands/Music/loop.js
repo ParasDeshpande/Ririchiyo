@@ -18,26 +18,26 @@ module.exports = class LoopCommand extends BaseCommand {
         const result = await musicUtil.canModifyPlayer({ message, requiredPerms: "MANAGE_PLAYER", errorEmbed: true, noPlayer: true });
         if (result.error) return;
 
-        switch (args ? parseOptions(args[0]) : (result.player ? result.player.loopType : guildData.settings.music.loop)) {
+        switch (args ? parseOptions(args[0]) : (result.player ? result.player.loopState : guildData.settings.music.loop)) {
             default:
                 if (result.player) result.player.setQueueRepeat(true);
-                if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "q";
+                if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "QUEUE";
                 break;
-            case "q":
+            case "QUEUE":
                 if (result.player) result.player.setTrackRepeat(true);
-                if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "t";
+                if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "TRACK";
                 break;
-            case "t":
+            case "TRACK":
                 if (result.player) {
                     result.player.setTrackRepeat(false);
                     result.player.setQueueRepeat(false);
                 }
-                if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "d";
+                if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.loop = "DISABLED";
                 break;
         }
 
-        await message.channel.send(this.embedify(message.guild, `${message.author} Set the loop to ${(result.player ? result.player.loopType : guildData.settings.music.loop) == "d" ? "disabled" : ((result.player ? result.player.loopType : guildData.settings.music.loop) == "t" ? "track" : "queue")}.`));
-        if (result.player && message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Set the loop to ${(result.player ? result.player.loopType : guildData.settings.music.loop) == "d" ? "disabled" : ((result.player ? result.player.loopType : guildData.settings.music.loop) == "t" ? "track" : "queue")}.`));
+        await message.channel.send(this.embedify(message.guild, `${message.author} Set the loop to ${result.player ? result.player.loopState : guildData.settings.music.loop}.`));
+        if (result.player && message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Set the loop to ${result.player ? result.player.loopState : guildData.settings.music.loop}.`));
     }
 }
 
@@ -48,7 +48,7 @@ function parseOptions(args) {
         case "stop":
         case "off":
         case "no":
-            return "t";
+            return "TRACK";
         case "t":
         case "track":
         case "song":
@@ -56,14 +56,14 @@ function parseOptions(args) {
         case "current":
         case "one":
         case "playing":
-            return "q";
+            return "QUEUE";
         case "q":
         case "queue":
         case "entire":
         case "all":
         case "playlist":
         case "everything":
-            return "d";
+            return "DISABLED";
         default: return;
     }
 }

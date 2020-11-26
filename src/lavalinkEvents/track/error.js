@@ -6,6 +6,7 @@ module.exports = class TrackErrorEvent extends BaseEvent {
     }
 
     async run(manager, player, track, error) {
-        manager
+        if (player.playingMessage) player.playingMessage.error = true;
+        await player.options.textChannelOBJ.send(this.embedify(player.guild, `**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`${track.requester.mention}\` \`\nAn error occured while playing track!`, true))
     }
 }

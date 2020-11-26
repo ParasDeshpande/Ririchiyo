@@ -28,7 +28,7 @@ module.exports = class SummonCommand extends BaseCommand {
                     .addField("Player Voice Channel", `${this.appearance.playerEmojis.voice_channel_icon_normal.emoji} ${authorVoiceChannel.name}`)
                     .addField("Player Text Channel", `<#${message.channel.id}>`)
                     .addField("Volume", `${message.guild.player.volume}%`, true)
-                    .addField("Loop", `${message.guild.player.trackRepeat ? `Track` : (message.guild.player.queueRepeat ? `Queue` : `Disabled`)}`, true)
+                    .addField("Loop", `${message.guild.player.loopState}`, true)
                     .addField("Volume limit to 100", `${!guildData.settings.music.volume.limit ? `Disabled` : `Enabled`}`, true)
                     .setColor(this.getClientColour(message.guild))
                 await message.channel.send(reconnectedEmbed);
@@ -38,27 +38,30 @@ module.exports = class SummonCommand extends BaseCommand {
         }
 
         message.guild.player = await message.client.lavalinkClient.create({
-            guild: message.guild,
+            guild: message.guild.id,
+            guildOBJ: message.guild,
             guildData: guildData,
-            inactivityTimeout: this.settings.client.music.inactivityTimeout,
-            voiceChannel: authorVoiceChannel,
-            textChannel: message.channel,
+            voiceChannel: authorVoiceChannel.id,
+            voiceChannelOBJ: authorVoiceChannel,
+            textChannel: message.channel.id,
+            textChannelOBJ: message.channel,
             selfDeafen: true,
-            guildDeaf: authorVoiceChannel.clientPermissions.has("DEAFEN_MEMBERS"),
+            guildDeafen: true,
+            inactivityTimeout: this.settings.client.music.inactivityTimeout,
             volume: (guildData.settings.music.volume.limit && guildData.settings.music.volume.value > 100) ? 100 : parseInt(guildData.settings.music.volume.value)
         });
 
         //apply guild settings to player
         switch (guildData.settings.music.loop) {
-            case "q": message.guild.player.setQueueRepeat(true);
+            case "QUEUE": message.guild.player.setQueueRepeat(true);
                 break;
-            case "t": message.guild.player.setTrackRepeat(true);
+            case "TRACK": message.guild.player.setTrackRepeat(true);
                 break;
             default:
                 break;
         }
 
-        await message.guild.player.setEQ(guildData.settings.music.eq.bands.map((gain, index) => { return { band: index, gain } }));
+        await message.guild.player.setEQ(...guildData.settings.music.eq.bands.map((gain, band) => ({ band, gain })));
 
         //connect to the channel
         await message.guild.player.connect();
@@ -69,7 +72,7 @@ module.exports = class SummonCommand extends BaseCommand {
                 .addField("Player Voice Channel", `${this.appearance.playerEmojis.voice_channel_icon_normal.emoji} ${authorVoiceChannel.name}`)
                 .addField("Player Text Channel", `<#${message.channel.id}>`)
                 .addField("Volume", `${message.guild.player.volume}`, true)
-                .addField("Loop", `${message.guild.player.trackRepeat ? `Track` : (message.guild.player.queueRepeat ? `Queue` : `Disabled`)}`, true)
+                .addField("Loop", `${message.guild.player.loopState}`, true)
                 .addField("Volume limit to 100", `${!guildData.settings.music.volume.limit ? `Disabled` : `Enabled`}`, true)
                 .setColor(this.getClientColour(message.guild))
             await message.channel.send(joinedEmbed);

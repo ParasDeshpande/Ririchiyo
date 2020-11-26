@@ -1,11 +1,15 @@
-const lavalinkClient = require("./src/index");
-const SpotifyPlugin = require("./src/spotify");
+const erela = require("erela.js");
+const SpotifyPlugin = require("erela.js-spotify");
+const Ririchiyo = require('erela.js-ririchiyo');
 const credentials = require('../../config/credentials.json');
 
 module.exports = {
     async loadClient(client) {
-        client.lavalinkClient = new lavalinkClient.Manager({
-            plugins: [new SpotifyPlugin({ clientID: credentials.spotify.clientID, clientSecret: credentials.spotify.clientSecret })],
+        client.lavalinkClient = new erela.Manager({
+            plugins: [
+                new Ririchiyo(),
+                new SpotifyPlugin({ clientID: credentials.spotify.clientID, clientSecret: credentials.spotify.clientSecret })
+            ],
             nodes: [
                 {
                     host: credentials.lavalink.host,

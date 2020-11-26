@@ -8,7 +8,7 @@ module.exports = class ReadyEvent extends BaseEvent {
 
     async run(client) {
         const clientData = await client.db.getClient(client.user.id);
-        await client.lavalinkClient.init(client);
+        await client.lavalinkClient.init(client.user.id);
 
         await handleRestartData(client, clientData.restartData);
 

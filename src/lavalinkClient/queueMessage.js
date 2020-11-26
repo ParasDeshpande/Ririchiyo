@@ -29,7 +29,7 @@ module.exports = class PlayingMessage {
         const queueMessage = await message.channel.send(pagesArray[selectedPage]);
 
         if (pagesArray.length > 2) {
-            const filter = (reaction, user) => user.id !== player.client.user.id;
+            const filter = (reaction, user) => user.id !== user.client.user.id;
             queueMessage.collector = queueMessage.createReactionCollector(filter, { time: 45000 });
 
             const reactionOptions = [musicUtil.appearance.playerEmojis.arrow_left.id, musicUtil.appearance.playerEmojis.arrow_right.id]

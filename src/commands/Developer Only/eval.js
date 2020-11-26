@@ -15,7 +15,7 @@ module.exports = class EvalCommand extends BaseCommand {
             requiredPermissionsToView: { internal: ["BOT_OWNER"] }
         })
     }
-    async run({ message, arg, editedEvent }) {
+    async run({ message, arg, editedEvent, guildData }) {
         if (!message.channel.clientPermissions.has("EMBED_LINKS")) return message.channel.send("I don't have permissions to send message embeds in this channel");
         if (!message.author.permissions.internal.final.has("BOT_OWNER")) return message.channel.send(this.embedify(message.guild, "You don't have permission to use that command!", true));
 
@@ -25,8 +25,7 @@ module.exports = class EvalCommand extends BaseCommand {
         if (!codeBlock) return message.channel.send(this.embedify(message.guild, "Please provide code to evaluate in a js code block!", true));
         if (codeBlock.lang != '' && codeBlock.lang != 'js') return message.channel.send(this.embedify(message.guild, "Only js eval is supported!", true));
         const code = codeBlock.content;
-        const finalExecCode = await replaceSensitiveInput(await code.replace(/\\n/g, "\n").trim());
-        const finalDisplayCode = await code.replace(/\\n/g, "\n").trim();
+        const finalExecCode = await code.replace(/\\n/g, "\n").trim();
         if (!finalExecCode) return message.channel.send(this.embedify(message.guild, "Please provide code to evaluate in a js code block!", true));
 
         try {
@@ -36,12 +35,12 @@ module.exports = class EvalCommand extends BaseCommand {
 
             if (typeof result !== "string") result = inspect(result);
 
-            if (message.oldEvalMessage && editedEvent) return await message.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalDisplayCode, result, execTime)));
-            else return message.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalDisplayCode, result, execTime)));
+            if (message.oldEvalMessage && editedEvent) return await message.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalExecCode, result, execTime)));
+            else return message.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalExecCode, result, execTime)));
         }
         catch (err) {
-            if (message.oldEvalMessage && editedEvent) return await message.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalDisplayCode, err.message, null, true), true));
-            else return message.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalDisplayCode, err.message, null, true), true));
+            if (message.oldEvalMessage && editedEvent) return await message.oldEvalMessage.edit(this.embedify(message.guild, await generateResult(finalExecCode, err.message, null, true), true));
+            else return message.oldEvalMessage = await message.channel.send(this.embedify(message.guild, await generateResult(finalExecCode, err.message, null, true), true));
         }
     }
 }
@@ -66,8 +65,4 @@ async function generateResult(input, output, execTime, error) {
 
 async function multiLineComment(comment) {
     return `/**\n * ${comment}\n */\n`;
-}
-
-async function replaceSensitiveInput(input) {
-    return input.replace(/t[^\s\nt]*o[^\s\n\o]*k[^\s\n\k]*e[^\s\n\e]*n/gi, "notToken");
 }

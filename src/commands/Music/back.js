@@ -18,16 +18,11 @@ module.exports = class BackCommand extends BaseCommand {
         const result = await musicUtil.canModifyPlayer({ message, requiredPerms: "MANAGE_PLAYER", errorEmbed: true });
         if (result.error) return;
 
-        if (!result.player || result.player.previousTracks.length < 1) return message.channel.send(this.embedify(message.guild, "There are no previous tracks!", true));
+        if (!result.player || result.player.trackHistory.length < 1) return message.channel.send(this.embedify(message.guild, "There are no previous tracks!", true));
 
-        const tracksArray = result.player.queue.current ? [await result.player.previousTracks.shift(), result.player.queue.current] : await result.player.previousTracks.shift();
-        let startPlaying = false;
-        if (!result.player.playing && !result.player.queue.current) startPlaying = true;
-        await result.player.queue.add(tracksArray, 0);
-        if (startPlaying) await result.player.play();
-        else await result.player.stop();
+        await result.player.backTo();
 
         message.channel.send(this.embedify(message.guild, `${message.author} Started playing the previous track!`));
-        if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Started playing the previous track!`));
+        if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Started playing the previous track!`));
     }
 }

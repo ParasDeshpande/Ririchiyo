@@ -10,8 +10,7 @@ module.exports = class PlayerInactivityEvent extends BaseEvent {
             player.playingMessage.delete().catch(console.error);
             delete player.playingMessage;
         }
-        delete player.guild.player;
-        player.textChannel.send(this.embedify(player.guild, `I left the voice channel due to inactivity!\nIf you have **[premium](${this.settings.client.info.premiumURL})**, you can disable this by using \`${player.guildData.settings.prefix}24/7\``, false, this.appearance.warn.colour));
+        player.options.textChannelOBJ.send(this.embedify(player.options.guildOBJ, `I left the voice channel due to inactivity!\nIf you have **[premium](${this.settings.client.info.premiumURL})**, you can disable this by using \`${player.options.guildData.settings.prefix}24/7\``, false, this.appearance.warn.colour));
         await player.destroy();
     }
 }

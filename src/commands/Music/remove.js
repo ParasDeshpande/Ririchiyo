@@ -51,7 +51,7 @@ module.exports = class RemoveCommand extends BaseCommand {
             const removedTrack = await result.player.queue.remove(searchResult[0].refIndex);
             const embedified = this.embedify(message.guild, `**[${this.discord.escapeMarkdown(removedTrack[0].title)}](${removedTrack[0].uri})**\nRemoved from the queue by - ${message.author}`);
             await message.channel.send(embedified);
-            if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(embedified);
+            if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(embedified);
             return removedTrack;
         }
 
@@ -62,14 +62,14 @@ module.exports = class RemoveCommand extends BaseCommand {
             const removedTrack = await result.player.queue.remove(start - 1);
             const embedified = this.embedify(message.guild, `**[${this.discord.escapeMarkdown(removedTrack[0].title)}](${removedTrack[0].uri})**\nRemoved from the queue by - ${message.author}`);
             await message.channel.send(embedified);
-            if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(embedified);
+            if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(embedified);
             return removedTrack;
         }
         else {
             const removedTrack = await result.player.queue.remove(start - 1, end - 1);
             const embedified = this.embedify(message.guild, `${message.author} Removed ${end - start} track${end - start > 1 ? 's' : ''} from the player queue.`);
             await message.channel.send(embedified);
-            if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(embedified);
+            if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(embedified);
             return removedTrack;
         }
     }

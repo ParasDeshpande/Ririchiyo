@@ -25,7 +25,7 @@ module.exports = class PlayCommand extends BaseCommand {
                 await message.guild.player.pause(false);
                 const embedified = this.embedify(message.guild, `${message.author} Resumed the player!`);
                 await message.channel.send(embedified);
-                if (message.channel.id != message.guild.player.textChannel.id) await message.guild.player.textChannel.send(embedified);
+                if (message.channel.id != message.guild.player.options.textChannelOBJ.id) await message.guild.player.options.textChannelOBJ.send(embedified);
                 return;
             }
             else if (message.guild.player && message.guild.player.playing && !message.guild.player.paused) {
@@ -34,7 +34,7 @@ module.exports = class PlayCommand extends BaseCommand {
                 await message.guild.player.pause(true);
                 const embedified = this.embedify(message.guild, `${message.author} Paused the player!`);
                 await message.channel.send(embedified);
-                if (message.channel.id != message.guild.player.textChannel.id) await message.guild.player.textChannel.send(embedified);
+                if (message.channel.id != message.guild.player.options.textChannelOBJ.id) await message.guild.player.options.textChannelOBJ.send(embedified);
                 return;
             }
             else return await message.channel.send(this.embedify(message.guild, `${message.author} Please provide a song title or link to search for!`, true));
@@ -74,12 +74,12 @@ module.exports = class PlayCommand extends BaseCommand {
                 case "PLAYLIST_LOADED":
                     queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(res.playlist.name)}](${res.playlist.uri}) \n(${addedTrack.length} Tracks)**\n\`Added playlist to the queue by - \`${addedTrack[0].requester.mention}\` \``);
                     await searchingMessage.edit(queuedEmbed);
-                    if (searchingMessage.channel.id != player.textChannel.id) player.textChannel.send(queuedEmbed);
+                    if (searchingMessage.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
                     break;
                 default:
                     queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(addedTrack.title)}](${addedTrack.uri})**\n\`Added track to the queue by - \`${addedTrack.requester.mention}\` \``);
                     await searchingMessage.edit(queuedEmbed);
-                    if (searchingMessage.channel.id != player.textChannel.id) player.textChannel.send(queuedEmbed);
+                    if (searchingMessage.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
                     break;
             }
         }

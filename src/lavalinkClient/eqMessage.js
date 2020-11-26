@@ -49,7 +49,7 @@ module.exports = async function sendEqMessage(message, viewOnly, modifyDB, guild
                         const currentBandGain = parseFloat(parseFloat(storedBands.bands[cursor - 1]).toFixed(roundingAccuracy));
                         const changedBandGain = parseFloat((currentBandGain + 0.1).toFixed(roundingAccuracy));
                         if (changedBandGain <= eqHighestLimit) {
-                            if (message.guild.player) await message.guild.player.setEQ([{ band: cursor - 1, gain: changedBandGain }]);
+                            if (message.guild.player) await message.guild.player.setEQ({ band: cursor - 1, gain: changedBandGain });
                             if (modifyDB) await await guildData.settings.music.eq.setEQ([{ band: cursor - 1, gain: changedBandGain }]);
 
                             await EQMessage.edit(convertBandsToGraph(storedBands.bands, cursor), { code: true });
@@ -61,7 +61,7 @@ module.exports = async function sendEqMessage(message, viewOnly, modifyDB, guild
                         const currentBandGain = parseFloat(parseFloat(storedBands.bands[cursor - 1]).toFixed(roundingAccuracy));
                         const changedBandGain = parseFloat((currentBandGain - 0.1).toFixed(roundingAccuracy))
                         if (changedBandGain >= eqLowestLimit) {
-                            if (message.guild.player) await message.guild.player.setEQ([{ band: cursor - 1, gain: changedBandGain }])
+                            if (message.guild.player) await message.guild.player.setEQ({ band: cursor - 1, gain: changedBandGain })
                             if (modifyDB) await guildData.settings.music.eq.setEQ([{ band: cursor - 1, gain: changedBandGain }]);
 
                             await EQMessage.edit(convertBandsToGraph(storedBands.bands, cursor), { code: true });

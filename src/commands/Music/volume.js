@@ -35,6 +35,6 @@ module.exports = class VolumeCommand extends BaseCommand {
         if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.volume.value = newVolume;
 
         await message.channel.send(this.embedify(message.guild, `${message.author} Set the volume to ${newVolume}%.`));
-        if (result.player && message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Set the volume to ${newVolume}%.`));
+        if (result.player && message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Set the volume to ${newVolume}%.`));
     }
 }

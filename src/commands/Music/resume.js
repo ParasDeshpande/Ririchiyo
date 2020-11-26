@@ -21,7 +21,7 @@ module.exports = class ResumeCommand extends BaseCommand {
         if (result.player.paused) {
             await result.player.pause(false);
             await message.channel.send(this.embedify(message.guild, `${message.author} Resumed the player!`));
-            if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Resumed the player!`));
+            if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Resumed the player!`));
         }
         else await message.channel.send(this.embedify(message.guild, "The player is already playing!", true));
     }

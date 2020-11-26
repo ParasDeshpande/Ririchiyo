@@ -38,11 +38,11 @@ module.exports = class BassboostCommand extends BaseCommand {
             bandsArray.push({ band: bassBands[index], gain: (parseFloat((effectivenessOnBand[index] / 100) * gainRequested)).toFixed(2) });
         }
 
-        if (result.player) result.player.setEQ(bandsArray);
+        if (result.player) result.player.setEQ(...bandsArray);
 
         if (message.author.permissions.internal.final.has("MANAGE_PLAYER")) guildData.settings.music.eq.setEQ(bandsArray);
 
         await message.channel.send(this.embedify(message.guild, `${message.author} Set the bassboost to ${gainRequested}`));
-        if (result.player && message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Set the bassboost to ${gainRequested}`));
+        if (result.player && message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Set the bassboost to ${gainRequested}`));
     }
 }

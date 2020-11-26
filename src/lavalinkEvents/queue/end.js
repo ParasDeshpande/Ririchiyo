@@ -7,11 +7,10 @@ module.exports = class QueueEndEvent extends BaseEvent {
 
     async run(manager, player, event) {
         if (player.playingMessage && !player.playingMessage.deleted) {
-            await player.playingMessage.delete().catch(console.error);
+            await player.playingMessage.delete().catch(err => { if (err.message != 'Unknown Message') console.log(err) });
             delete player.playingMessage;
         }
-
-        await player.textChannel.send(this.embedify(player.guild, "The music queue has ended."));
+        await player.options.textChannelOBJ.send(this.embedify(player.options.guildOBJ, "The music queue has ended."));
         player.stop();
     }
 }

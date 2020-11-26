@@ -21,6 +21,6 @@ module.exports = class ShuffleCommand extends BaseCommand {
         await result.player.queue.shuffle();
 
         message.channel.send(this.embedify(message.guild, `${message.author} Shuffled the queue!`));
-        if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Shuffled the queue!`));
+        if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Shuffled the queue!`));
     }
 }

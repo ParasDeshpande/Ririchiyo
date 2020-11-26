@@ -19,7 +19,7 @@ module.exports = class MusicSettings {
             }
         });
         Object.defineProperty(this, "24/7", {
-            get: function () { return musicSettingsData.loop },
+            get: function () { return musicSettingsData["24/7"] },
             set: function (value) {
                 if (!value) delete musicSettingsData["24/7"];
                 else musicSettingsData["24/7"] = value;

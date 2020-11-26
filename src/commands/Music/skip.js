@@ -18,10 +18,9 @@ module.exports = class SkipCommand extends BaseCommand {
         const result = await musicUtil.canModifyPlayer({ message, requiredPerms: "MANAGE_PLAYER", errorEmbed: true });
         if (result.error) return;
 
-        await result.player.previousTracks.unshift(result.player.queue.current);
-        await result.player.stop();
+        await result.player.skipTo();
 
         message.channel.send(this.embedify(message.guild, `${message.author} Skipped the current song!`));
-        if (message.channel.id != result.player.textChannel.id) await result.player.textChannel.send(this.embedify(message.guild, `${message.author} Skipped the current song!`));
+        if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Skipped the current song!`));
     }
 }

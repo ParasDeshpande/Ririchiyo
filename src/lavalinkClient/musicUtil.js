@@ -31,7 +31,7 @@ module.exports = class MusicUtil extends CommandUtil {
                 return { error: { message: "NO_AUTHOR_CHANNEL_AND_PLAYER_EXISTS", code: 3 } };
             }
             else {
-                if (authorVoiceChannel.id != player.voiceChannel.id) {
+                if (authorVoiceChannel.id != player.options.voiceChannelOBJ) {
                     if (spawningPlayer) {
                         message.channel.send(errorEmbed.setDescription("Already playing in a different channel!"));
                         return { error: { message: "PLAYER_ALREADY_EXISTS", code: 4 } };
