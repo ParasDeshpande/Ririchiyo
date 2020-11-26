@@ -5,8 +5,8 @@ module.exports = class TrackErrorEvent extends BaseEvent {
         super('trackError', 'track');
     }
 
-    async run(manager, player, track, error) {
+    async run(manager, player, track, payload) {
         if (player.playingMessage) player.playingMessage.error = true;
-        await player.options.textChannelOBJ.send(this.embedify(player.guild, `**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`${track.requester.mention}\` \`\nAn error occured while playing track!`, true))
+        await player.options.textChannelOBJ.send(this.embedify(player.guild, `**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`${track.requester.mention}\` \`\nAn error occured while playing track: \`${payload.error ? (payload.error ? payload.error : "UNKNOWN_ERROR") : "UNKNOWN_ERROR"}\``, true))
     }
 }

@@ -60,6 +60,16 @@ module.exports = class PlayCommand extends BaseCommand {
         }
         const res = await player.search(arg, requester);
 
+        if (!res) {
+            return await searchingMessage.edit(this.embedify(player.guild, `An error occured while searching the track: 404 RESPONSE_TIMED_OUT`, true))
+        }
+        if (res.loadType === "NO_MATCHES") {
+            return await searchingMessage.edit(this.embedify(player.guild, `Could not find any tracks matching your query!`, true))
+        }
+        if (res.loadType === "LOAD_FAILED") {
+            return await searchingMessage.edit(this.embedify(player.guild, `An error occured while searching the track: \`${res.exception ? (res.exception.message ? res.exception.message : "UNKNOWN_ERROR") : "UNKNOWN_ERROR"}\``, true))
+        }
+
         const addedTrack = res.loadType == "SEARCH_RESULT" ? res.tracks[0] : res.tracks;
 
         if (!addedTrack) return searchingMessage.edit(this.embedify(message.guild, `Could not find any results for query "\`${arg}\`"`, true));
