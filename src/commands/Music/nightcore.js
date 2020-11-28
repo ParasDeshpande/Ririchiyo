@@ -20,6 +20,12 @@ module.exports = class NightcoreCommand extends BaseCommand {
 
         result.player.nightcore = !result.player.nightcore;
 
+        if (result.player.nightcore) result.player.setTimescale({
+            speed: 1.2999999523162842,
+            pitch: 1.2999999523162842
+        });
+        else result.player.setTimescale();
+
         message.channel.send(this.embedify(message.guild, `${message.author} Set the nightcore mode to ${result.player.nightcore}!`));
         if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Set the nightcore mode to ${result.player.nightcore}!`));
     }
