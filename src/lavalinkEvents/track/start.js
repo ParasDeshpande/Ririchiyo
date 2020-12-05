@@ -1,6 +1,4 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
-const PlayingMessage = require("../../lavalinkClient/playingMessage");
-const playingMessage = new PlayingMessage();
 
 module.exports = class TrackStartEvent extends BaseEvent {
     constructor() {
@@ -8,6 +6,6 @@ module.exports = class TrackStartEvent extends BaseEvent {
     }
 
     async run(manager, player, track) {
-        playingMessage.update({ player, track });
+        await player.playingMessageManager.createMessage(track.requester.requestID, player, track).send();
     }
 }

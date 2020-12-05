@@ -8,5 +8,6 @@ module.exports = class PlayerMoveEvent extends BaseEvent {
     async run(manager, player, oldChannel, newChannel) {
         if (!newChannel) return manager.emit("playerDisconnect", player, oldChannel);
         player.voiceChannel = newChannel;
+        player.options.voiceChannelOBJ = await player.options.voiceChannelOBJ.client.channels.resolve(newChannel);
     }
 }

@@ -1,6 +1,7 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
 const MusicUtil = require("../../lavalinkClient/musicUtil");
 const musicUtil = new MusicUtil;
+const uniqid = require('uniqid');
 
 module.exports = class PlayCommand extends BaseCommand {
     constructor() {
@@ -48,26 +49,21 @@ module.exports = class PlayCommand extends BaseCommand {
 
         const player = await message.guild.player;
 
-        const searchingEmbed = new this.discord.MessageEmbed()
-            .setTitle(`Searching!`)
-            .setColor(this.appearance.processing.colour)
-
-        const searchingMessage = await message.channel.send(searchingEmbed);
-
         const requester = {
             displayName: message.member.nickname ? message.member.nickname : message.author.username,
-            mention: `<@${message.author.id}>`
+            mention: `<@${message.author.id}>`,
+            requestID: uniqid()
         }
         const res = await player.search(arg, requester);
 
         if (!res) {
-            return await searchingMessage.edit(this.embedify(player.guild, `An error occured while searching the track: 404 RESPONSE_TIMED_OUT`, true))
+            return await message.channel.send(this.embedify(player.guild, `An error occured while searching the track: \`404 RESPONSE_TIMED_OUT\``, true))
         }
         if (res.loadType === "NO_MATCHES") {
-            return await searchingMessage.edit(this.embedify(player.guild, `Could not find any tracks matching your query!`, true))
+            return await message.channel.send(this.embedify(player.guild, `Could not find any tracks matching your query!`, true))
         }
         if (res.loadType === "LOAD_FAILED") {
-            return await searchingMessage.edit(this.embedify(player.guild, `An error occured while searching the track: \`${res.exception ? (res.exception.message ? res.exception.message : "UNKNOWN_ERROR") : "UNKNOWN_ERROR"}\``, true))
+            return await message.channel.send(this.embedify(player.guild, `An error occured while searching the track: \`${res.exception ? (res.exception.message ? res.exception.message : "UNKNOWN_ERROR") : "UNKNOWN_ERROR"}\``, true))
         }
 
         const addedTracks = res.loadType == "SEARCH_RESULT" ? [res.tracks[0]] : res.tracks;
@@ -81,18 +77,15 @@ module.exports = class PlayCommand extends BaseCommand {
             switch (res.loadType) {
                 case "PLAYLIST_LOADED":
                     queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(res.playlist.name)}](${res.playlist.uri}) \n(${addedTracks.length} Tracks)**\n\`Added playlist to the queue by - \`${addedTracks[0].requester.mention}\` \``);
-                    await searchingMessage.edit(queuedEmbed);
-                    if (searchingMessage.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
+                    await message.channel.send(queuedEmbed);
+                    if (message.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
                     break;
                 default:
                     queuedEmbed.setDescription(`**[${this.discord.escapeMarkdown(addedTracks[0].title)}](${addedTracks[0].uri})**\n\`Added track to the queue by - \`${addedTracks[0].requester.mention}\` \``);
-                    await searchingMessage.edit(queuedEmbed);
-                    if (searchingMessage.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
+                    await message.channel.send(queuedEmbed);
+                    if (message.channel.id != player.options.textChannelOBJ.id) player.options.textChannelOBJ.send(queuedEmbed);
                     break;
             }
-        }
-        else {
-            player.playingMessage = searchingMessage;
         }
 
         if (!player.playing && !player.paused) await player.play();

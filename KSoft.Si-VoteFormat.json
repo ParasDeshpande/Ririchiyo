@@ -1,0 +1,20 @@
+{
+    "embed": {
+        "author": {
+            "name": "top.gg",
+            "icon_url": "https://cdn.discordapp.com/attachments/696721793573978122/782862268006006814/svgxmlbase64PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIzNyIgdmll.png"
+        },
+        "title": "[ Vote added ]",
+        "description": "`%userid%` voted the bot on **[top.gg](https://top.gg/bot/696661803182194698)**",
+        "timestamp": "%voteexp%",
+        "footer": {
+            "text": "Expires on"
+        },
+        "fields": [
+            {
+                "name": "data",
+                "value": "```{\n\t'userID': '%userid%',\n\t'userMention': '%mention%',\n\t'expiry': '%voteexp%',\n\t'date': '%votedate%'\n}```"
+            }
+        ]
+    }
+}

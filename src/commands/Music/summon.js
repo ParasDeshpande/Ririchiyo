@@ -1,6 +1,7 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
 const MusicUtil = require("../../lavalinkClient/musicUtil");
 const musicUtil = new MusicUtil;
+const PlayingMessageManager = require('../../musicUtil/PlayingMessageManager');
 
 module.exports = class SummonCommand extends BaseCommand {
     constructor() {
@@ -48,7 +49,8 @@ module.exports = class SummonCommand extends BaseCommand {
             selfDeafen: true,
             guildDeafen: true,
             inactivityTimeout: this.settings.client.music.inactivityTimeout,
-            volume: (guildData.settings.music.volume.limit && guildData.settings.music.volume.value > 100) ? 100 : parseInt(guildData.settings.music.volume.value)
+            volume: (guildData.settings.music.volume.limit && guildData.settings.music.volume.value > 100) ? 100 : parseInt(guildData.settings.music.volume.value),
+            maxErrorsPer10Seconds: 3
         });
 
         //apply guild settings to player
@@ -65,6 +67,9 @@ module.exports = class SummonCommand extends BaseCommand {
 
         //connect to the channel
         await message.guild.player.connect();
+
+        //initialize the playingMessageManager
+        message.guild.player.playingMessageManager = new PlayingMessageManager();
 
         if (!internalCall) {
             const joinedEmbed = new this.discord.MessageEmbed()
