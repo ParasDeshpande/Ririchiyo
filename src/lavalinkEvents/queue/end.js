@@ -6,7 +6,6 @@ module.exports = class QueueEndEvent extends BaseEvent {
     }
 
     async run(manager, player, track, event) {
-        await player.playingMessageManager.deleteMessage(track.requester.requestID);
         await player.options.textChannelOBJ.send(this.embedify(player.options.guildOBJ, "The music queue has ended."));
         player.stop();
     }

@@ -17,7 +17,7 @@
     "discord.js": "^12.4.1",
     "dot-prop": "^6.0.0",
     "erela.js": "github:Solaris9/erela.js#build",
-    "erela.js-ririchiyo": "^2.2.8",
+    "erela.js-ririchiyo": "^2.3.2",
     "erela.js-spotify": "^1.2.0",
     "express": "^4.17.1",
     "fuse.js": "^6.4.3",

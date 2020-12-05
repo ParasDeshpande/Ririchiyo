@@ -18,7 +18,7 @@ module.exports = class DisconnectCommand extends BaseCommand {
         const result = await musicUtil.canModifyPlayer({ message, requiredPerms: "MANAGE_PLAYER", errorEmbed: true });
         if (result.error) return;
 
-        if (result.player.queue.current && result.player.queue.current.playingMessage) await result.player.queue.current.playingMessage.delete();
+        if (result.player.queue.current) await result.player.playingMessageManager.deleteMessage(result.player.queue.current.requester.requestID);
         await result.player.destroy();
 
         await message.channel.send(this.embedify(message.guild, `${message.author} Successfully disconnected from the voice channel and cleared the queue!`));
