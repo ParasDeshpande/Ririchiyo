@@ -1,6 +1,6 @@
 {
   "name": "ririchiyo",
-  "version": "0.0.0",
+  "version": "0.9.1",
   "description": "A easy to use discord music bot",
   "main": "src/main/shardingManager.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "discord.js": "^12.4.1",
     "dot-prop": "^6.0.0",
     "erela.js": "github:Solaris9/erela.js#build",
-    "erela.js-ririchiyo": "^2.3.2",
+    "erela.js-ririchiyo": "^2.3.4",
     "erela.js-spotify": "^1.2.0",
     "erlpack": "github:discord/erlpack",
     "express": "^4.17.1",

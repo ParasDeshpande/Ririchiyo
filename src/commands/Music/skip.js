@@ -18,7 +18,7 @@ module.exports = class SkipCommand extends BaseCommand {
         const result = await musicUtil.canModifyPlayer({ message, requiredPerms: "MANAGE_PLAYER", errorEmbed: true });
         if (result.error) return;
 
-        await result.player.skip();
+        await result.player.skip(0, true);
 
         message.channel.send(this.embedify(message.guild, `${message.author} Skipped the current song!`));
         if (message.channel.id != result.player.options.textChannelOBJ.id) await result.player.options.textChannelOBJ.send(this.embedify(message.guild, `${message.author} Skipped the current song!`));
