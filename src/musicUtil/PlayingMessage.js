@@ -27,9 +27,7 @@ module.exports = class PlayingMessage extends MusicUtil {
         const permissions = this.channel.permissionsFor(this.channel.client.user);
         if (!permissions.has("SEND_MESSAGES")) return;
         if (!permissions.has("EMBED_LINKS")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to embed links in this channel!", true));
-        if (!permissions.has("MANAGE_MESSAGES")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to manage messages in this channel!\nThis permission is required for reaction messages to work correctly", true));
-        if (!permissions.has("ADD_REACTIONS")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to add reactions in this channel!\nThis permission is required for reaction messages to work correctly", true));
-        if (!permissions.has("USE_EXTERNAL_EMOJIS")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to use external emojis in this channel!\nThis permission is required for reaction messages to work correctly", true));
+        if (!permissions.has("USE_EXTERNAL_EMOJIS")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to use external emojis in this channel!\nThe playing message contains emojis from an external server which cannot be sent here without the permission to use external emojis!", true));
 
         /**
         * Send message
@@ -43,6 +41,8 @@ module.exports = class PlayingMessage extends MusicUtil {
 
         if (this.messageNoSend) return this.delete();
 
+        if (!permissions.has("ADD_REACTIONS")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to add reactions in this channel!\nThis permission is required for reaction controls to work correctly", true));
+
         /**
         * Reaction options and collector
         */
@@ -53,7 +53,7 @@ module.exports = class PlayingMessage extends MusicUtil {
             const permissions = this.channel.permissionsFor(this.channel.client.user);
             if (!permissions.has("SEND_MESSAGES")) return;
             if (!permissions.has("EMBED_LINKS")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to embed links in this channel!", true));
-            if (!permissions.has("MANAGE_MESSAGES")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to manage messages in this channel!\nThis permission is required for reaction messages to work correctly", true));
+            if (!permissions.has("MANAGE_MESSAGES")) return this.channel.send(this.embedify(this.guild, "I don't have permissions to manage messages in this channel!\nThis permission is required for reaction controls to work correctly", true));
 
             await reaction.users.remove(user).catch(err => {
                 if (err.message != 'Unknown Message') console.error(err);
