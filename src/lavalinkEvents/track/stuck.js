@@ -7,6 +7,6 @@ module.exports = class TrackStuckEvent extends BaseEvent {
 
     async run(manager, player, track, payload) {
         await player.playingMessageManager.deleteMessage(track.requester.requestID);
-        await player.options.textChannelOBJ.send(this.embedify(player.guild, `**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`The track got stuck while playing\``, true))
+        await player.options.textChannelOBJ.send(this.embedify(player.guild, `**[${this.discord.escapeMarkdown(track.title)}](${track.uri})**\n\`Added by - \`${track.requester.mention}\` \`\nAn error occured while playing track: \`The track got stuck while playing\``, true))
     }
 }
