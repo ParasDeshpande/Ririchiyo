@@ -12,6 +12,7 @@
     "@discordjs/opus": "^0.3.3",
     "@ksoft/api": "^3.1.9",
     "axios": "^0.21.0",
+    "bufferutil": "^4.0.2",
     "common-tags": "^1.8.0",
     "discord-markdown": "^2.4.1",
     "discord.js": "^12.4.1",
@@ -19,12 +20,16 @@
     "erela.js": "github:Solaris9/erela.js#build",
     "erela.js-ririchiyo": "^2.3.2",
     "erela.js-spotify": "^1.2.0",
+    "erlpack": "github:discord/erlpack",
     "express": "^4.17.1",
     "fuse.js": "^6.4.3",
+    "libsodium-wrappers": "^0.7.8",
     "mongodb": "^3.6.2",
     "ms": "^2.1.2",
     "string-progressbar": "^1.0.1",
     "uniqid": "^5.2.0",
-    "vultrex.haste": "^1.0.1"
+    "utf-8-validate": "^5.0.3",
+    "vultrex.haste": "^1.0.1",
+    "zlib-sync": "^0.1.7"
   }
 }
