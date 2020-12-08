@@ -91,10 +91,9 @@ module.exports = class PlayingMessage extends MusicUtil {
         * Reaction emojis add
         */
         for (const option of reactionOptions) {
-            if (this.message && !this.message.deleted) await this.message.react(option).catch((err) => {
-                if (err.message === "Unknown Message") return null;
-                else return console.error(err);
-            });
+            if (this.message && !this.message.deleted) {
+                if (!await this.message.react(option).catch((err) => { if (err.message !== "Unknown Message") console.error(err); return; })) return;
+            }
             else return;
         }
 

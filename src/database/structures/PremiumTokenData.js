@@ -1,12 +1,13 @@
-const { deepMerge } = require('./util/functions');
+const merge = require('deepmerge');
 const defaultData = require('../schemas/Token');
 
 module.exports = class PremiumTokenData {
     constructor(tokensCollection, fetchedData) {
-        const data = deepMerge(defaultData, fetchedData);
+        const data = merge(defaultData, fetchedData);
         this.id = data._id;
         this.renewals = data.renewals;
         this.giftable = data.giftable;
+        this.isVotingReward = data.isVotingReward;
 
         Object.defineProperty(this, "purchasedByID", {
             get: function () { return this.renewals[0].renewedByID },
@@ -48,6 +49,13 @@ module.exports = class PremiumTokenData {
             const index = this.boostedGuilds.indexOf(guildID);
             if (index > -1) this.boostedGuilds.splice(index, 1);
             tokensCollection.updateOne({ _id: data._id }, { $pull: { "boostedGuilds": guildID } }, { upsert: true })
+        }
+
+        this.delete = async function () {
+            for (const guildID of this.boostedGuilds) {
+                this.unBoostGuild(guildID);
+                this.usedByID = "DELETED";
+            }
         }
     }
 }

@@ -20,8 +20,8 @@ module.exports = class ReadyEvent extends BaseEvent {
                 try {
                     if (this.clientData.activity.devMode.enabled) await this.client.user.setActivity(this.clientData.activity.devMode.status, { type: this.clientData.activity.devMode.type });
                     else await this.client.user.setActivity(this.clientData.activity.normal.status, { type: this.clientData.activity.normal.type });
-                    const currentActivity = this.client.user.presence.activities[0];
-                    console.log(`Successfully updated the client presence\nType: ${currentActivity ? currentActivity.type : null}\nStatus: ${currentActivity ? currentActivity.name : null}`)
+                    //const currentActivity = this.client.user.presence.activities[0];
+                    //console.log(`Updated the client presence\nType: ${currentActivity ? currentActivity.type : null}\nStatus: ${currentActivity ? currentActivity.name : null}`)
                 } catch (err) {
                     console.error(err);
                 }
@@ -29,7 +29,5 @@ module.exports = class ReadyEvent extends BaseEvent {
             }
         };
         client.presenceUpdater.run();
-
-        console.log(`Discord connected: ${client.user.tag}`);
     }
 }

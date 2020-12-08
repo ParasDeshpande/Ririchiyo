@@ -1,4 +1,4 @@
-const { deepMerge } = require('./util/functions');
+const merge = require('deepmerge');
 const defaultData = require('../schemas/User');
 const UserPremium = require('./util/UserPremium');
 const UserNQN = require('./util/UserNQN');
@@ -6,7 +6,7 @@ const UserMusic = require('./util/UserMusic');
 
 module.exports = class UserData {
     constructor(usersCollection, fetchedData, dbFunctions) {
-        const data = deepMerge(defaultData, fetchedData);
+        const data = merge(defaultData, fetchedData);
         Object.defineProperty(this, "username", {
             get: function () { return data.username },
             set: function (value) {

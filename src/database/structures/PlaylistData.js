@@ -1,10 +1,11 @@
 const defaultData = require('../schemas/Playlist');
-const { deepMerge, findIndexWithPropInArray } = require('../../utils/util');
+const merge = require('deepmerge');
+const { findIndexWithPropInArray } = require('../../utils/util');
 const { tracks } = require('../schemas/Playlist');
 
 module.exports = class Playlist {
     constructor(playlistsCollection, fetchedData) {
-        const data = deepMerge(defaultData, fetchedData);
+        const data = merge(defaultData, fetchedData);
         Object.defineProperty(this, "id", { get: function () { return data._id }, set: function (value) { data._id = value } });
         this.userID = data.userID;
         this.name = data.name;

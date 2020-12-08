@@ -4,9 +4,9 @@ const musicUtil = new MusicUtil;
 const bassboostLowerLimit = -0.25;
 const bassboostHigherLimit = 1;
 const resetCommands = ["r", "res", "reset", "disable"];
-const bassBand = 0;
-const bassBands = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-const effectivenessOnBand = [100, 93, 86, 79, 72, 65, 58, 51, 44, 37, 30, 23, 16, 9, 2]
+const bassBand = 1;
+const bassBands = [1, 2]
+const effectivenessOnBand = [100, 60]
 
 module.exports = class BassboostCommand extends BaseCommand {
     constructor() {

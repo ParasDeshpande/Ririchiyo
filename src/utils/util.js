@@ -2,23 +2,6 @@ const CommandUtil = require("./structures/CommandUtil");
 const commandUtil = new CommandUtil;
 const axios = require("axios");
 
-let deepMerge = (...arguments) => {
-    let target = {};
-    let merger = (obj) => {
-        for (let prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
-                if (Object.prototype.toString.call(obj[prop]) === '[object Object]') {
-                    target[prop] = deepMerge(target[prop], obj[prop]);
-                } else {
-                    target[prop] = obj[prop];
-                }
-            }
-        }
-    };
-    for (let i = 0; i < arguments.length; i++) merger(arguments[i]);
-    return target;
-}
-
 function findIndexWithPropInArray(array, prop, value) {
     for (var i = 0; i < array.length; i += 1) {
         if (array[i][prop] === value) {
@@ -66,4 +49,4 @@ async function updateDiscordBotsListStats(client, guilds, users, voiceConnection
     return true;
 }
 
-module.exports = { deepMerge, findIndexWithPropInArray, restart, handleRestartData, updateDiscordBotsListStats };
+module.exports = { findIndexWithPropInArray, restart, handleRestartData, updateDiscordBotsListStats };

@@ -1,12 +1,15 @@
 const credentials = require('../../config/credentials.json');
 const settings = require("../../config/settings.json");
+const loader = require("../utils/loader");
 
-const { ShardingManager } = require('discord.js');
-const shard = new ShardingManager('src/main/index.js', {
+const Discord = require('discord.js');
+const ShardingManager = new Discord.ShardingManager('src/main/index.js', {
     token: credentials.discord.token,
     autoSpawn: true,
     totalShards: settings.client.shards.totalShards,
 });
 
-shard.on("shardCreate", shard => console.log(`Starting Shard ${shard.id + 1}/${shard.manager.totalShards}`));
-shard.spawn();
+ShardingManager.on("shardCreate", async (shard) => {
+    await loader.loadEvents(shard, "src/shardEvents")
+});
+ShardingManager.spawn();

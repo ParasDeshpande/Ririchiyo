@@ -4,7 +4,8 @@ module.exports = {
     "discriminator": undefined,
     "avatar": undefined,
     "premium": {
-        "token": undefined
+        "renewals": [], //Array of renewals
+        "boostedGuilds": [] //Array of boosted guild IDs
     },
     "nqn": {
         "subscribedPacks": [] //[ARRAY OF PACK IDs]

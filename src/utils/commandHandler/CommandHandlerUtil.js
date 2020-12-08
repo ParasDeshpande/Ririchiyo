@@ -37,14 +37,13 @@ module.exports = class CommandHandlerUtil extends CommandUtil {
     }
 
     async sendDirectMessageHandler(client, message, messageToBeSent, userIdToDM) {
-        let success = true;
         if (message !== null && !userIdToDM) userIdToDM = message.author.id;
-
-        const obj = await client.users.fetch(userIdToDM).then(async (user) => {
-            await user.send(messageToBeSent).catch(error => {
-                success = false;
-            });
-        });
-        return { success: success, obj: obj };
+        try {
+            const obj = await client.users.fetch(userIdToDM).then(async (user) => await user.send(messageToBeSent));
+            return { success: true, obj: obj };
+        }
+        catch (error) {
+            return { success: false, error };
+        }
     }
 }

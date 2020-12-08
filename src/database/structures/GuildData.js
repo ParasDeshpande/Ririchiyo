@@ -1,10 +1,10 @@
 const GuildSettings = require('./util/GuildSettings');
-const { deepMerge } = require('./util/functions');
+const merge = require('deepmerge');
 const defaultData = require('../schemas/Guild');
 
 module.exports = class GuildData {
     constructor(guildsCollection, fetchedData, dbFunctions) {
-        const data = deepMerge(defaultData, fetchedData);
+        const data = merge(defaultData, fetchedData);
         this.settings = new GuildSettings(guildsCollection, data.settings, data._id, dbFunctions);
     }
 }

@@ -21,7 +21,7 @@ module.exports = class NightcoreCommand extends BaseCommand {
         result.player.nightcore = !result.player.nightcore;
 
         if (result.player.nightcore) result.player.setTimescale({
-            speed: 1.2999999523162842,
+            speed: 1.0999999993162842,
             pitch: 1.2999999523162842
         });
         else result.player.setTimescale();

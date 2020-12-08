@@ -2,7 +2,7 @@ const { Collection } = require('discord.js');
 const { Permissions } = require('discord.js');
 const InternalPermissions = require('./InternalPermissions');
 const defaultPermissionData = require('../../schemas/PermissionData');
-const { deepMerge } = require('../util/functions');
+const merge = require('deepmerge');
 const owners = require('../../../../config/owners');
 const dotProp = require('dot-prop');
 
@@ -17,7 +17,7 @@ module.exports = class UserPermissions {
         this.getForUser = function (userID) {
             const cacheCheck = this._cache.get(userID);
             if (cacheCheck) return cacheCheck;
-            const merged = deepMerge(defaultPermissionData, data.permissions.users[userID]);
+            const merged = merge(defaultPermissionData, data.permissions.users[userID] || {});
             const userPermissionInst = new UserPermission(db, data, merged, guildID, userID, rolePermissionsClass);
             this._cache.set(userID, userPermissionInst);
             return userPermissionInst;

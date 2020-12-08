@@ -19,7 +19,7 @@ module.exports = class CommandUtil {
         return colour == '#000000' && !raw ? this.appearance.general.colour : colour;
     }
     embedify(guild, message, error, colour) {
-        if (!colour) colour = error ? appearance.error.colour : this.getClientColour(guild);
+        if (!colour && guild) colour = error ? appearance.error.colour : this.getClientColour(guild);
         return new MessageEmbed().setColor(colour).setDescription(message);
     }
     hasAll(has, req) {

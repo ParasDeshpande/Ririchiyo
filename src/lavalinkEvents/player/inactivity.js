@@ -6,10 +6,7 @@ module.exports = class PlayerInactivityEvent extends BaseEvent {
     }
 
     async run(manager, player) {
-        if (player.playingMessage && !player.playingMessage.deleted) {
-            player.playingMessage.delete().catch(console.error);
-            delete player.playingMessage;
-        }
+        if (player.queue.current) await player.playingMessageManager.deleteMessage(player.queue.current.requester.requestID);
         player.options.textChannelOBJ.send(this.embedify(player.options.guildOBJ, `I left the voice channel due to inactivity!\nIf you have **[premium](${this.settings.client.info.premiumURL})**, you can disable this by using \`${player.options.guildData.settings.prefix}24/7\``, false, this.appearance.warn.colour));
         await player.destroy();
     }
