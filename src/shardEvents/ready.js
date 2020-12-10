@@ -17,6 +17,7 @@ module.exports = class ShardReadyEvent extends BaseEvent {
     webhookAccepter(shard) {
         const webhook = new Topgg.Webhook(this.credentials.discordbotslist.webhook.authorization);
         app.post("/vote/top.gg", webhook.middleware(), async (req, res) => {
+            if (!req.vote) return;
             shard.manager.broadcastEval(`this.emit("vote", "top.gg", {voteID:"${uniqid()}","userID":"${req.vote.user.toString()}","bonus":${req.vote.isWeekend}})`);
             res.sendStatus(200);
         });

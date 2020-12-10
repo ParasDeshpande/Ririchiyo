@@ -7,6 +7,7 @@ module.exports = class MessageEditEvent extends BaseEvent {
 
     async run(client, oldState, newState) {
         if (newState.member.id === client.user.id) {
+            if (!newState.channel) return;
             if (newState.guild.player) {
                 if (newState.serverDeaf === false) {
                     if (newState.channel.permissionsFor(client.user).has("DEAFEN_MEMBERS")) newState.setDeaf(true).catch(console.error);

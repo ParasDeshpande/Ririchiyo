@@ -1,6 +1,4 @@
 const BaseCommand = require('../../utils/structures/BaseCommand');
-const MusicUtil = require("../../lavalinkClient/musicUtil");
-const musicUtil = new MusicUtil;
 
 module.exports = class BoostCommand extends BaseCommand {
     constructor() {

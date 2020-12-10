@@ -1,6 +1,6 @@
 module.exports = class GuildPremium {
     constructor(db, premiumData, id, dbFunctions) {
-        this.renewPermium = async function (duration, type, giftedByID, addedByID) {
+        this.renew = async function (duration, type, giftedByID, addedByID) {
             const now = Date.now();
             const renewalData = {
                 "renewedOn": now,

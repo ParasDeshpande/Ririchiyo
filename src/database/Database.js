@@ -33,6 +33,7 @@ module.exports = class Database {
             };
             this.connection = connection;
             console.log(`Database connected: ${databaseName}`);
+            this.collections.users.watch(console.log)
             return connection;
         } catch {
             throw new Error("Could not connect to the database");
