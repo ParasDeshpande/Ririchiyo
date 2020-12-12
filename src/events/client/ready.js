@@ -1,6 +1,10 @@
 const BaseEvent = require('../../utils/structures/BaseEvent');
 const { handleRestartData } = require('../../utils/util');
 const settings = require('../../../config/settings.json');
+const credentials = require('../../../config/credentials.json');
+const Topgg = require('@top-gg/sdk')
+
+const api = new Topgg.Api(credentials.discordbotslist.token);
 
 module.exports = class ReadyEvent extends BaseEvent {
     constructor() {
@@ -29,5 +33,19 @@ module.exports = class ReadyEvent extends BaseEvent {
             }
         };
         client.presenceUpdater.run();
+
+        //Upload stats to dbl
+        api.postStats({
+            serverCount: client.guilds.cache.size,
+            shardId: client.shard.ids[0], // if you're sharding
+            shardCount: client.options.shardCount
+        });
+        setInterval(() => {
+            api.postStats({
+                serverCount: client.guilds.cache.size,
+                shardId: client.shard.ids[0], // if you're sharding
+                shardCount: client.options.shardCount
+            })
+        }, 1800000) // post every 30 minutes
     }
 }
