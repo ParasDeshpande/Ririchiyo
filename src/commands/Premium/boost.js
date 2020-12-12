@@ -23,7 +23,7 @@ module.exports = class BoostCommand extends BaseCommand {
         if (userLastRenewal.allowedBoosts <= userBoostedGuilds.length) return message.channel.send(this.embedify(message.guild, `You have already reached the maximum number of boosts allowed on your account!\nUpgrade your premium plan to boost more servers...`, true));
 
         await userData.premium.boostGuild(message.guild.id);
-        await guildData.settings.premium.renewPermium(userLastRenewal.duration, userLastRenewal.type, userLastRenewal.giftedByID, message.author.id);
+        await guildData.settings.premium.renew(userLastRenewal.duration, userLastRenewal.type, userLastRenewal.giftedByID, message.author.id);
 
         message.channel.send(this.embedify(message.guild, `${message.author} Boosted this server!\nYay!!!`));
     }
