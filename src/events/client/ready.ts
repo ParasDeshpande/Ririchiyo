@@ -1,7 +1,6 @@
 import BaseEvent from '../../utils/structures/BaseEvent';
-import GlobalCTX from '../../utils/GlobalCTX';
 import { Client } from 'discord.js';
-import { MessageParser, Utils } from '../../utils/Utils';
+import { Utils } from '../../utils/Utils';
 
 export default class ReadyEvent extends BaseEvent {
     constructor() {
@@ -12,6 +11,8 @@ export default class ReadyEvent extends BaseEvent {
     }
 
     async run(client: Client) {
+        this.globalCTX.lavalinkClient.init(client);
+
         const presenceUpdater = {
             run: async function () {
                 try {

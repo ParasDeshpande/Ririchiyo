@@ -1,19 +1,19 @@
 import Utils from "../Utils";
 import GlobalCTX from '../GlobalCTX';
 
-export class BaseEvent extends Utils {
+export class BaseEvent {
     name: string;
     category: string;
-    globalCTX: typeof GlobalCTX;
+    globalCTX = GlobalCTX;
+    utils = Utils;
 
     constructor(options: EventProps) {
-        super();
         const { name, category } = check(options);
         this.name = name;
         this.category = category;
         this.globalCTX = GlobalCTX;
     }
-    async run(...args: any[]): Promise<void> { };
+    async run(...args: any[]): Promise<any> { };
 }
 
 export interface EventProps {

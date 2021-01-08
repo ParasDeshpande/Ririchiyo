@@ -2,10 +2,11 @@
     "compilerOptions": {
         "module": "CommonJS",
         "target": "ES2018",
-        "strict": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "outDir": "dist",
+        "declaration": true,
+        "strict": true,
         "lib": [
             "ESNext",
             "ESNext.Array",
@@ -14,7 +15,7 @@
             "ESNext.Symbol",
             "DOM"
         ],
-        "sourceMap": false,
+        "sourceMap": true,
         "esModuleInterop": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true

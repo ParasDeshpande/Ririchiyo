@@ -25,6 +25,10 @@ export default class GuildPermission {
         return new InternalPermissions(this.isUser ? this.GuildSettings._data.settings.permissions.users[this.id]?.denied : this.GuildSettings._data.settings.permissions.roles[this.id]?.denied || DefaultGuildPermissionsData.denied).freeze();
     }
 
+    get overwrites() {
+        return new InternalPermissions(InternalPermissions.DEFAULT).add(this.allowed).remove(this.denied);
+    }
+
     async allow(permission: InternalPermissionResolvable): Promise<GuildPermission> {
         const newAllowed = new InternalPermissions(this.allowed).add(permission).bitfield;
         const newDenied = new InternalPermissions(this.denied).remove(permission).bitfield;

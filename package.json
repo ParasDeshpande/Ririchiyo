@@ -5,19 +5,21 @@
   "type": "commonjs",
   "main": "src/main/ShardingManager.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node .",
-    "test": "tsc && cd dist && node ."
+    "start": "cd dist && node .",
+    "test": "rmdir dist /S /Q && mkdir dist && tsc && npm start"
   },
   "author": "Paras Deshpande",
   "license": "MIT",
   "dependencies": {
+    "6ec0bd7f": "^2.4.3",
     "chalk": "^4.1.0",
     "deepmerge": "^4.2.2",
     "discord.js": "^12.5.1",
     "dot-prop": "^6.0.1",
     "mongodb": "^3.6.3",
-    "ms": "^2.1.3"
+    "ms": "^2.1.3",
+    "source-map-support": "^0.5.19",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/mongodb": "^3.6.3",

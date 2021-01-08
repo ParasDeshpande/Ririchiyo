@@ -1,6 +1,6 @@
 import { BitField } from 'discord.js';
 
-export type InternalPermissionResolvable = number | "SUMMON_PLAYER" | "VIEW_QUEUE" | "ADD_TO_QUEUE" | "MANAGE_QUEUE" | "MANAGE_PLAYER" | "DJ";
+export type InternalPermissionResolvable = number | "SUMMON_PLAYER" | "VIEW_QUEUE" | "ADD_TO_QUEUE" | "MANAGE_QUEUE" | "MANAGE_PLAYER" | "DJ" | InternalPermissionResolvable[];
 
 export class InternalPermissions extends BitField<string> {
     static ALL: number;

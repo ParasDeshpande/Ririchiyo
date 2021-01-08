@@ -2,7 +2,6 @@ import BaseEvent from '../../utils/structures/BaseEvent';
 import { WebSocketManager, GuildMember, TextChannel } from 'discord.js';
 import { Utils, Cooldowns } from '../../utils/Utils';
 import { CommandCTX } from '../../utils/structures/BaseCommand';
-import GlobalCTX from '../../utils/GlobalCTX';
 
 export interface InteractionData {
     version: number,
@@ -45,26 +44,29 @@ export default class SlashCommandEvent extends BaseEvent {
     }
 
     async run(ws: WebSocketManager, interaction: InteractionData) {
-        if (!GlobalCTX.DB) throw new Error("Database is not present in global CTX.");
-        if (!GlobalCTX.commands) throw new Error("Commands are not loaded in global CTX.");
+        if (!this.globalCTX.DB) throw new Error("Database is not present in global CTX.");
+        if (!this.globalCTX.commands) throw new Error("Commands are not loaded in global CTX.");
 
-        const command = GlobalCTX.commands.get(interaction.data.name);
+        const command = this.globalCTX.commands.get(interaction.data.name);
         if (!command) return;
 
         const recievedTimestamp = Date.now();
-        const channel = GlobalCTX.client.channels.resolve(interaction.channel_id) as TextChannel;
-        const guild = GlobalCTX.client.guilds.resolve(interaction.guild_id);
+        const channel = this.globalCTX.client.channels.resolve(interaction.channel_id) as TextChannel;
+        const guild = this.globalCTX.client.guilds.resolve(interaction.guild_id);
         if (!guild) return;
 
-        const member = new GuildMember(GlobalCTX.client!, interaction.member, guild);
+        const member = new GuildMember(this.globalCTX.client!, interaction.member, guild);
 
         if (await Cooldowns.check(command, member.user, channel, null)) return;
 
-        const permissions = channel.permissionsFor(GlobalCTX.client.user!);
+        const permissions = channel.permissionsFor(this.globalCTX.client.user!);
         if (!permissions) return;
 
 
         const args = interaction.data.options.map(o => o.value);
+
+        const guildData = await this.globalCTX.DB.getGuild(guild.id);
+        const guildSettings = await this.globalCTX.DB.getGuildSettings(guild.id);
 
         const ctx: CommandCTX = {
             command,
@@ -72,15 +74,17 @@ export default class SlashCommandEvent extends BaseEvent {
             member,
             channel,
             guild,
-            client: GlobalCTX.client,
+            client: this.globalCTX.client,
             permissions,
-            recievedTimestamp
+            recievedTimestamp,
+            guildData,
+            guildSettings
         }
 
         try {
             command.run(ctx);
         } catch (err) {
-            GlobalCTX.logger?.error(err);
+            this.globalCTX.logger?.error(err);
             channel.send(Utils.embedifyString(guild, `There was an error executing that command, please try again.\nIf this error persists, please report this issue on our support server- [ririchiyo.xyz/support](${Utils.settings.info.supportServerURL})`, true));
         }
     }

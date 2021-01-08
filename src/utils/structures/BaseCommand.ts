@@ -1,19 +1,21 @@
-import Utils from "../Utils";
 import GlobalCTX from '../GlobalCTX';
+import GuildData from '../../database/structures/Guild';
 import GuildSettings from '../../database/structures/GuildSettings';
-import { Message, GuildMember, User, TextChannel, Client, Permissions, Guild } from 'discord.js';
+//import UserData from '../../database/structures/User';
+import Utils from "../Utils";
+import { GuildMember, TextChannel, Client, Permissions, Guild } from 'discord.js';
 
-export class BaseCommand extends Utils {
+export class BaseCommand {
     name: string;
     aliases: string[] | undefined;
     category: string;
     description: string;
     cooldown: number;
     hidden: boolean;
-    globalCTX: typeof GlobalCTX;
+    globalCTX = GlobalCTX;
+    utils = Utils;
 
     constructor(options?: CommandProps) {
-        super();
         const { name, aliases, category, description, cooldown, hidden } = check(options);
         this.name = name;
         this.aliases = aliases;
@@ -23,7 +25,7 @@ export class BaseCommand extends Utils {
         this.hidden = hidden || false;
         this.globalCTX = GlobalCTX;
     }
-    async run(ctx: CommandCTX): Promise<any> { };
+    async run(ctx: CommandCTX, internalCall: boolean = false): Promise<any> { };
     getUsage(guildPrefix: string): string | void { };
 }
 
@@ -63,7 +65,9 @@ export interface CommandCTX {
     member: GuildMember,
     channel: TextChannel,
     guild: Guild,
-    guildSettings?: GuildSettings,
+    guildData: GuildData,
+    guildSettings: GuildSettings,
+    //userData: UserData,
     client: Client,
     permissions: Readonly<Permissions>,
     recievedTimestamp: number

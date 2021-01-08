@@ -16,10 +16,10 @@ export default class HelpCommand extends BaseCommand {
     async run(ctx: CommandCTX) {
         if (!ctx.permissions.has("EMBED_LINKS")) return await ctx.channel.send("I don't have permissions to send message embeds in this channel");
 
-        const helpEmbed = new BaseCommand.discord.MessageEmbed();
+        const helpEmbed = new this.utils.discord.MessageEmbed();
 
         //Get viewable commands
-        const commands = (BaseCommand.owners.find(u => u.id === ctx.member.id) ? GlobalCTX.commands : GlobalCTX.commands.filter(cmd => !cmd.hidden)).array();
+        const commands = (this.utils.owners.find(u => u.id === ctx.member.id) ? GlobalCTX.commands : GlobalCTX.commands.filter(cmd => !cmd.hidden)).array();
 
         //Get command categories
         const commandCategories: string[] = [];
@@ -29,9 +29,9 @@ export default class HelpCommand extends BaseCommand {
         if (!guildSettingsData) return;
 
         if (!ctx.args[0]) {
-            helpEmbed.setAuthor(`${ctx.client.user?.username || "Ririchiyo"}`, ctx.client.user?.avatarURL() || "https://cdn.discordapp.com/embed/avatars/4.png", BaseCommand.settings.info.websiteURL)
+            helpEmbed.setAuthor(`${ctx.client.user?.username || "Ririchiyo"}`, ctx.client.user?.avatarURL() || "https://cdn.discordapp.com/embed/avatars/4.png", this.utils.settings.info.websiteURL)
                 .setDescription(`A feature rich and easy to use discord music bot.\n\nMy prefix on this server is \`${guildSettingsData.prefix}\`\n\n**List of all commands-**`)
-                .setColor(BaseCommand.getClientColour(ctx.guild));
+                .setColor(this.utils.getClientColour(ctx.guild));
 
             for (const category of commandCategories) {
                 const commandsInCategory = commands.filter(cmd => cmd.category === category);
@@ -41,10 +41,10 @@ export default class HelpCommand extends BaseCommand {
 
                 const joinedcommandNamesWithAliases = commandNamesWithAliases.join(', ');
 
-                helpEmbed.addField(`${BaseCommand.firstLetterCaps(category)}`, `${joinedcommandNamesWithAliases}`);
+                helpEmbed.addField(`${this.utils.firstLetterCaps(category)}`, `${joinedcommandNamesWithAliases}`);
             }
 
-            helpEmbed.addField(`\u200B`, `For help about a specific command or category,\nuse \`${guildSettingsData.prefix}${this.name} <category name>\` or \`${guildSettingsData.prefix}${this.name} <command name>\`\n\nFeel free to join our **[support server](${BaseCommand.settings.info.supportServerURL})** for more help.\nAdd me to another server- **[invite](${await ctx.client.generateInvite({ permissions: BaseCommand.settings.default_invite_permissions })})**`);
+            helpEmbed.addField(`\u200B`, `For help about a specific command or category,\nuse \`${guildSettingsData.prefix}${this.name} <category name>\` or \`${guildSettingsData.prefix}${this.name} <command name>\`\n\nFeel free to join our **[support server](${this.utils.settings.info.supportServerURL})** for more help.\nAdd me to another server- **[invite](${await ctx.client.generateInvite({ permissions: this.utils.settings.default_invite_permissions })})**`);
         }
         else {
             const processedQuery = [];
@@ -64,19 +64,19 @@ export default class HelpCommand extends BaseCommand {
                 helpEmbed
                     .setTitle(`${guildSettingsData.prefix}${command.name}${command.aliases ? ` (${command.aliases})` : ""}`)
                     .setDescription(`${command.description}\n\n${commandUsage ? "**Usage**\n" + commandUsage : ''}`)
-                    .setColor(BaseCommand.getClientColour(ctx.guild));
+                    .setColor(this.utils.getClientColour(ctx.guild));
             }
             else if (category) {
                 const commandsInCategory = commands.filter(cmd => cmd.category === category);
                 helpEmbed
-                    .setDescription(`**${BaseCommand.firstLetterCaps(category)} commands**`)
-                    .setColor(BaseCommand.getClientColour(ctx.guild));
+                    .setDescription(`**${this.utils.firstLetterCaps(category)} commands**`)
+                    .setColor(this.utils.getClientColour(ctx.guild));
                 for (const command of commandsInCategory) helpEmbed.addField(`**${guildSettingsData.prefix}${command.name} ${command.aliases ? `(${command.aliases})` : ""}**`, `${command.description}`, true)
             }
             //if nothing is found
             else helpEmbed
                 .setDescription('Could not find the command or category you were looking for.\nPlease check if you have typed it correctly.')
-                .setColor(BaseCommand.appearance.colours.error);
+                .setColor(this.utils.appearance.colours.error);
         }
 
         await ctx.channel.send(helpEmbed).catch((err: Error) => GlobalCTX.logger?.error(err.message));

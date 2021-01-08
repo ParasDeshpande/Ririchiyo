@@ -5,7 +5,6 @@ import BaseCommand from './structures/BaseCommand';
 import BaseEvent from './structures/BaseEvent';
 import GlobalCTX from './GlobalCTX';
 import { EventEmitter } from 'events';
-import { Client } from 'discord.js';
 
 interface CommandLoaderOpts {
     exclude?: {
@@ -59,20 +58,8 @@ export async function loadEvents(client: EventEmitter, dir: string, opts: EventL
                 const evt = new Event();
                 if (options.exclude && options.exclude.events && options.exclude.events.includes(evt.name) || options.exclude && options.exclude.categories && options.exclude.categories.includes(evt.category)) continue;
                 client.on(evt.name, evt.run.bind(evt, client));
+                GlobalCTX.logger?.info(`Loaded event from ${GlobalCTX.logger?.chalk.underline(dir)} -> [${evt.category}|${evt.name}]`);
             }
         }
     }
 }
-
-// export interface EmojisConfig {
-//     [key: string]: string
-// }
-// export async function loadEmojis(client: Client, emojisConfig: EmojisConfig) {
-//     for (const emojiName in emojisConfig) {
-//         const emojiID = emojisConfig[emojiName];
-//         if (!emojiID || emojiID === "") continue;
-
-//         const foundEmoji = await BaseCommand.findEmojiOnAllShardsWithID(client, emojiID);
-//         if (foundEmoji) GlobalCTX.customEmojiCache.set(emojiName, foundEmoji);
-//     }
-// }

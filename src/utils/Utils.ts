@@ -7,13 +7,19 @@ import chalk, { Chalk } from 'chalk';
 
 import { BaseCommand, CommandCTX } from './structures/BaseCommand';
 import GlobalCTX from "./GlobalCTX";
+import InternalPermissions, { InternalPermissionResolvable } from "../database/utils/InternalPermissions";
+import { Player } from "6ec0bd7f/dist";
+import GuildData from "../database/structures/Guild";
+import GuildSettings from "../database/structures/GuildSettings";
 
 export type Commands = discord.Collection<BaseCommand["name"], BaseCommand>;
 
 export interface MessageParserCTX {
     prefix: string,
     commandsCollection: Commands,
-    message: discord.Message
+    message: discord.Message,
+    guildData: GuildData,
+    guildSettings: GuildSettings
 }
 
 export class Cooldowns {
@@ -86,7 +92,7 @@ export class MessageParser {
         }
 
 
-        return { command, args, member: message.member as discord.GuildMember, channel, client: message.client, permissions, recievedTimestamp, guild: message.guild }
+        return { command, args, member: message.member as discord.GuildMember, channel, client: message.client, permissions, recievedTimestamp, guild: message.guild, guildData: ctx.guildData, guildSettings: ctx.guildSettings }
     }
 }
 
@@ -199,6 +205,136 @@ export class Utils {
     }
 }
 
+export class CustomError {
+    // Class props //
+    code?: number;
+    flag?: string;
+    missingPerms?: string[]
+    isPermsError = false;
+    readonly isSuccess = false;
+    readonly isError = true;
+    // Class props //
+    constructor(code: number, flag: string, missingPerms?: string[]) {
+        this.code = code;
+        this.flag = flag;
+        if (missingPerms && missingPerms.length > 0) {
+            this.isPermsError = true;
+            this.missingPerms = missingPerms;
+        }
+    }
+}
+
+export class Success {
+    // Class props //
+    code: number;
+    flag: string;
+    authorVoiceChannel?: discord.VoiceChannel;
+    player?: Player;
+    readonly isSuccess = true;
+    readonly isError = false;
+    // Class props //
+    constructor(code: number, flag: string, authorVoiceChannel?: discord.VoiceChannel, player?: Player) {
+        this.code = code;
+        this.flag = flag;
+        this.authorVoiceChannel = authorVoiceChannel;
+        this.player = player;
+    }
+}
+
+export class MusicUtil {
+    public static canModifyPlayer(options: CanModifyPlayerOptions): Success | CustomError {
+        const player = GlobalCTX.lavalinkClient.players.get(options.guild.id);
+        const { channel: botVoiceChannel } = options.guild.me?.voice || {};
+        const { channel: authorVoiceChannel } = options.member.voice;
+
+        /** If the player is required to run the command and player does not exist */
+        if (options.playerRequired && !player) return new CustomError(1, "NO_PLAYER");
+
+        if (player && botVoiceChannel) {
+            /** If the author is not in the same voice channel where the player is playing */
+            if (!authorVoiceChannel || authorVoiceChannel.id !== player.voiceChannel?.id) {
+                /** If the author is not in the same voice channel while requesting to spawn the player */
+                if (options.isSpawnAttempt) return new CustomError(2, "PLAYER_ALREADY_EXISTS");
+                /** If the author is not in the same voice channel */
+                return new CustomError(3, "NO_AUTHOR_CHANNEL_AND_PLAYER_EXISTS");
+            }
+            /** If the author is in the same voice channel as the player */
+            else {
+                /** If the author is trying to spawn the player while the player is already in his voice channel and connected */
+                if (options.isSpawnAttempt) return new CustomError(4, "PLAYER_ALREADY_EXISTS_SAME_CHANNEL");
+
+                /** If this is a normal command that the player has requested while all conditions are as they should be */
+                const missingPerms = options.memberPermissions.missing(options.requiredPermissions); //The permissions required which are missing, if not will be an empty array
+                /** If the author has permissions */
+                if (missingPerms.length === 0) return new Success(1, "HAS_PERMS", authorVoiceChannel, player);
+                /** If the author does not have permissions */
+                else {
+                    const vcMemberAmt = authorVoiceChannel.members.filter(member => !member.user.bot).size; //Amount of members in the author's voice channel
+                    /** If channel members are more than the allowed amount for free permissions */
+                    if (vcMemberAmt > options.vcMemberAmtForAllPerms) return new CustomError(5, "NO_PERMS_AND_NOT_ALONE", missingPerms);
+                    /** If the author has permissions due to the less amount of members in channel */
+                    return new Success(2, "NO_PERMS_AND_ALONE", authorVoiceChannel, player);
+                }
+            }
+        }
+        /** If the player does not exist and is not required */
+        else {
+            const missingPerms = options.memberPermissions.missing(options.requiredPermissions); //The permissions required which are missing, if not will be an empty array
+            /** If the author has the permissions */
+            if (missingPerms.length === 0) {
+                /** If this is a spawn attempt */
+                if (options.isSpawnAttempt) {
+                    /* If the author is not in a voice channel but is trying to summon the player */
+                    if (!authorVoiceChannel) return new CustomError(6, "NO_VOICE_CHANNEL");
+                    return new Success(3, "HAS_PERMS_TO_SPAWN_PLAYER", authorVoiceChannel);
+                }
+                /** If the player is not required and the author has permissions */
+                return new Success(3, "HAS_PERMS_AND_NO_PLAYER");
+            }
+            /** If the author does not have permissions */
+            else {
+                /** If the author is trying to summon the player and does not have permissions */
+                if (options.isSpawnAttempt) {
+                    /* If the author is not in a voice channel but is trying to summon the player */
+                    if (!authorVoiceChannel) return new CustomError(6, "NO_VOICE_CHANNEL");
+                    /* If the author is not in a voice channel and is trying to summon the player */
+                    else {
+                        const vcMemberAmt = authorVoiceChannel.members.filter(member => !member.user.bot).size; //Amount of members in the author's voice channel
+                        if (vcMemberAmt > options.vcMemberAmtForAllPerms) return new CustomError(7, "NO_PERMS_TO_SPAWN_PLAYER");
+                        return new Success(4, "NO_PERMS_AND_ALONE", authorVoiceChannel);
+                    }
+                }
+                /** If the author is trying to access a command but the player is not available */
+                else return new CustomError(1, "NO_PLAYER");
+            }
+        }
+    }
+}
+export interface CanModifyPlayerOptions {
+    guild: discord.Guild,
+    member: discord.GuildMember,
+    memberPermissions: InternalPermissions,
+    channel: discord.TextChannel,
+    playerRequired: boolean,
+    requiredPermissions: InternalPermissionResolvable,
+    sendError: boolean,
+    isSpawnAttempt: boolean,
+    vcMemberAmtForAllPerms: number
+}
+
+export type CanModifyPlayerResult = {
+    success?: {
+        message: string,
+        code: number
+    },
+    error?: {
+        message: string,
+        code: number
+    },
+    authorVoiceChannel?: discord.VoiceChannel,
+    player?: Player
+};
+
 export interface EmojisConfig {
     [key: string]: string
 }
@@ -234,32 +370,36 @@ export class Logger {
         return `${chalk.blueBright(`[${typeof this.shardID !== 'undefined' ? `SHARD-${this.shardID}` : "MANAGER"}]`)} ${chalk.yellowBright(`=> `)}`
     }
 
-    log(message: string) {
+    log(message: string): undefined {
         if (!this.initiated) throw new Error("Logger is not initiated.");
         if (typeof message !== 'string') throw new TypeError("Message to log must be a string.");
 
         console.log(this.identifier + chalk.green(message));
+        return;
     }
 
-    info(message: string) {
+    info(message: string): undefined {
         if (!this.initiated) throw new Error("Logger is not initiated.");
         if (typeof message !== 'string') throw new TypeError("Message to log must be a string.");
 
         console.log(this.identifier + chalk.cyan(message));
+        return;
     }
 
-    error(message: string) {
+    error(message: string): undefined {
         if (!this.initiated) throw new Error("Logger is not initiated.");
         if (typeof message !== 'string') throw new TypeError("Message to log must be a string.");
 
-        console.log(this.identifier + chalk.redBright(message));
+        console.trace(Utils.multiplyString(7, "\b") + this.identifier + chalk.redBright(message));
+        return;
     }
 
-    warn(message: string) {
+    warn(message: string): undefined {
         if (!this.initiated) throw new Error("Logger is not initiated.");
         if (typeof message !== 'string') throw new TypeError("Message to log must be a string.");
 
-        console.log(this.identifier + chalk.yellowBright(message));
+        console.trace(Utils.multiplyString(7, "\b") + this.identifier + chalk.yellowBright(message));
+        return;
     }
 }
 

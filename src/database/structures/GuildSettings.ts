@@ -11,6 +11,7 @@ export default class GuildSettings {
     _data: IGuildSettingsData;
     id: string;
     permissions: IGuildPermissions;
+    music: GuildMusicSettings;
     // Class props //
 
     constructor(DB: DB, data: IGuildSettingsData) {
@@ -21,6 +22,7 @@ export default class GuildSettings {
             users: new GuildPermissions(this, true),
             roles: new GuildPermissions(this, false)
         }
+        this.music = new GuildMusicSettings(this);
     }
 
     /**
