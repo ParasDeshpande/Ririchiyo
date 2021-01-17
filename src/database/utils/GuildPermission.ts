@@ -1,5 +1,5 @@
 import GuildSettings from '../structures/GuildSettings';
-import { BitField } from 'discord.js';
+import { BitField, GuildMember } from 'discord.js';
 import { InternalPermissions, InternalPermissionResolvable } from './InternalPermissions';
 import { IGuildPermissionsData, DefaultGuildPermissionsData } from '../data_structures/GuildPermissionsData';
 import dot from 'dot-prop';
@@ -27,6 +27,26 @@ export default class GuildPermission {
 
     get overwrites() {
         return new InternalPermissions(InternalPermissions.DEFAULT).add(this.allowed).remove(this.denied);
+    }
+
+    calculatePermissions(member: GuildMember): InternalPermissions {
+        if (!this.isUser) return this.overwrites;
+
+        if (member.permissions.has("ADMINISTRATOR")) return new InternalPermissions(InternalPermissions.ALL);
+        else {
+            const finalPermissions = new InternalPermissions(InternalPermissions.DEFAULT);
+            const memberRoleIDs = member.roles.cache.keyArray();
+            //For @everyone role id
+            const everyonePerms = this.GuildSettings.permissions.roles.getFor(memberRoleIDs.pop() || member.guild.id);
+            finalPermissions.add(everyonePerms.allowed).remove(everyonePerms.denied);
+            //Add and remove permissions for each role (lowest to highest - lowest first in array)
+            for (const roleID of memberRoleIDs) {
+                const rolePerms = this.GuildSettings.permissions.roles.getFor(roleID);
+                finalPermissions.add(rolePerms.allowed).remove(rolePerms.denied);
+            }
+            //User permissions override everything else
+            return finalPermissions.add(this.allowed).remove(this.denied);
+        }
     }
 
     async allow(permission: InternalPermissionResolvable): Promise<GuildPermission> {

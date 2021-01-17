@@ -36,7 +36,7 @@ export async function loadCommands(dir: string = "", opts: CommandLoaderOpts = {
                 const cmd = new Command();
                 if (options.exclude && options.exclude.commands && options.exclude.commands.includes(cmd.name) || options.exclude && options.exclude.categories && options.exclude.categories.includes(cmd.category)) continue;
                 GlobalCTX.commands.set(cmd.name, cmd);
-                GlobalCTX.logger?.info(`Loaded command from ${GlobalCTX.logger?.chalk.underline(dir)} -> [${cmd.category}|${cmd.name}]`);
+                //GlobalCTX.logger?.info(`Loaded command from ${GlobalCTX.logger?.chalk.underline(dir)} -> [${cmd.category}|${cmd.name}]`);
             }
         }
     }
@@ -58,7 +58,7 @@ export async function loadEvents(client: EventEmitter, dir: string, opts: EventL
                 const evt = new Event();
                 if (options.exclude && options.exclude.events && options.exclude.events.includes(evt.name) || options.exclude && options.exclude.categories && options.exclude.categories.includes(evt.category)) continue;
                 client.on(evt.name, evt.run.bind(evt, client));
-                GlobalCTX.logger?.info(`Loaded event from ${GlobalCTX.logger?.chalk.underline(dir)} -> [${evt.category}|${evt.name}]`);
+                //GlobalCTX.logger?.info(`Loaded event from ${GlobalCTX.logger?.chalk.underline(dir)} -> [${evt.category}|${evt.name}]`);
             }
         }
     }

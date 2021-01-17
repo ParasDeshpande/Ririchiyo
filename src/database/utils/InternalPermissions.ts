@@ -52,6 +52,6 @@ InternalPermissions.ALL = Object.values(InternalPermissions.FLAGS).reduce((all, 
  * Bitfield representing the default permissions for users
  * @type {number}
  */
-InternalPermissions.DEFAULT = 104324673;
+InternalPermissions.DEFAULT = 7;
 
 export default InternalPermissions;

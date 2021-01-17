@@ -1,6 +1,7 @@
 import { Db, MongoClient, MongoClientOptions, Collection as DBCollection } from 'mongodb';
 import { Collection } from 'discord.js';
 import dot from 'dot-prop';
+import GlobalCTX from '../utils/GlobalCTX';
 
 //Import classes
 import Guild from './structures/Guild';
@@ -42,7 +43,7 @@ export default class DB {
                 premiumTokens: connection.collection("premiumTokens")
             };
             this.connection = connection;
-            console.log(`Database connected: ${databaseName}`);
+            GlobalCTX.logger?.info(`Database connected: ${databaseName}`);
             return connection;
         } catch {
             throw new Error("Could not connect to the database");

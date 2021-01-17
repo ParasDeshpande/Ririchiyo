@@ -1,6 +1,6 @@
 {
     "shardingManager": {
-        "totalShards": 2
+        "totalShards": 1
     },
     "default_activity_status": {
         "type": 2,

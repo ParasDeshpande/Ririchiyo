@@ -9,7 +9,7 @@ import PlayingMessageManager from './musicUtil/PlayingMessageManager';
 export const GlobalCTX = new class GlobalCTX {
     client: Client;
     commands: Commands;
-    logger?: Logger;
+    logger?: Logger = new Logger().init();
     DB?: DB;
     lavalinkClient: Manager;
     playingMessages: PlayingMessageManager;

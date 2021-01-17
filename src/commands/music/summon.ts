@@ -1,5 +1,5 @@
 import { BaseCommand, CommandCTX } from '../../utils/structures/BaseCommand';
-import { MusicUtil } from '../../utils/Utils';
+import { MusicUtil, CustomError, Success } from '../../utils/Utils';
 import InternalPermissions from '../../database/utils/InternalPermissions';
 import { VoiceChannel } from 'discord.js';
 
@@ -7,29 +7,30 @@ export default class SummonCommand extends BaseCommand {
     constructor() {
         super({
             name: "summon",
-            aliases: ["join", "j"],
+            aliases: ["j", "join"],
             category: "music",
             description: "Make the bot join your channel."
         })
     }
 
-    async run(ctx: CommandCTX, internalCall: boolean = false, authorVoiceChannel?: VoiceChannel) {
-        if (!ctx.permissions.has("EMBED_LINKS")) return await ctx.channel.send("I don't have permissions to send message embeds in this channel");
-
-        if (!authorVoiceChannel) {
-            const conditions = await this.testConditions(ctx);
-            if (conditions.error) return conditions;
-            else authorVoiceChannel = conditions.authorVoiceChannel;
+    async run(ctx: CommandCTX, opts?: Success | CustomError): Promise<Success | CustomError> {
+        if (!ctx.permissions.has("EMBED_LINKS")) {
+            await ctx.channel.send("I don't have permissions to send message embeds in this channel");
+            return new CustomError(0, "NO_EMBED_PERMISSION");
         }
+
+        const res = await this.testConditions(ctx, opts);
+        if (res.isError) return res;
+
 
         const { channel: meVoiceChannel } = ctx.guild.me?.voice || {};
         let player = this.globalCTX.lavalinkClient.players.get(ctx.guild.id);
 
         if (player && !meVoiceChannel) {
-            if (!internalCall) {
+            if (!opts) {
                 const reconnectedEmbed = new this.utils.discord.MessageEmbed()
                     .setDescription(`**Reconnected to your voice channel!**`)
-                    .addField("Player Voice Channel", `${await this.utils.getEmoji("voice_channel_icon_normal")} ${authorVoiceChannel?.name || "unknown"}`)
+                    .addField("Player Voice Channel", `${await this.utils.getEmoji("voice_channel_icon_normal")} ${res.authorVoiceChannel?.name || "unknown"}`)
                     .addField("Player Text Channel", `<#${ctx.channel.id}>`)
                     .addField("Volume", `${player.volume}%`, true)
                     .addField("Loop", `${player.loopState}`, true)
@@ -38,12 +39,12 @@ export default class SummonCommand extends BaseCommand {
                 await ctx.channel.send(reconnectedEmbed).catch((err: Error) => this.globalCTX.logger?.error(err.message));;
             }
             player.connect();
-            return { player, guild: ctx.guild };
+            return new Success(0, "RESPAWNED");
         }
 
         player = this.globalCTX.lavalinkClient.create({
             guild: ctx.guild,
-            voiceChannel: authorVoiceChannel!,
+            voiceChannel: res.authorVoiceChannel!,
             textChannel: ctx.channel,
             inactivityTimeout: 120000,
             guildData: ctx.guildData,
@@ -70,10 +71,10 @@ export default class SummonCommand extends BaseCommand {
         //connect to the channel
         player?.connect();
 
-        if (!internalCall) {
+        if (!opts) {
             const joinedEmbed = new this.utils.discord.MessageEmbed()
                 .setDescription(`**Joined your voice channel!**`)
-                .addField("Player Voice Channel", `${await this.utils.getEmoji("voice_channel_icon_normal")} ${authorVoiceChannel?.name || "Unknown"}`)
+                .addField("Player Voice Channel", `${await this.utils.getEmoji("voice_channel_icon_normal")} ${res.authorVoiceChannel?.name || "Unknown"}`)
                 .addField("Player Text Channel", `<#${ctx.channel.id}>`)
                 .addField("Volume", `${player?.volume}`, true)
                 .addField("Loop", `${player?.loopState}`, true)
@@ -83,40 +84,35 @@ export default class SummonCommand extends BaseCommand {
         }
 
 
-        return { player: player, guild: ctx.guild };
+        return new Success(0, "", res.authorVoiceChannel, player);
     }
-    async testConditions(ctx: CommandCTX) {
-        const permissionsForMember = ctx.guildSettings.permissions.users.getFor(ctx.member.id);
-        if (!permissionsForMember) return { error: { code: 0, message: "Could not get user permissions." } };
-
-        const res = MusicUtil.canModifyPlayer({
+    async testConditions(ctx: CommandCTX, prevRes?: Success | CustomError): Promise<Success | CustomError> {
+        const res = prevRes || MusicUtil.canModifyPlayer({
             guild: ctx.guild,
             member: ctx.member,
-            channel: ctx.channel,
+            textChannel: ctx.channel,
             isSpawnAttempt: true,
-            sendError: true,
-            playerRequired: false,
+            noPlayerRequired: true,
             requiredPermissions: ["SUMMON_PLAYER"],
-            memberPermissions: permissionsForMember.overwrites || new InternalPermissions(0),
-            vcMemberAmtForAllPerms: 2
+            memberPermissions: ctx.guildSettings.permissions.users.getFor(ctx.member.id).calculatePermissions(ctx.member) || new InternalPermissions(0),
         });
         if (res.isError) return res;
 
         const authorVCperms = res.authorVoiceChannel?.permissionsFor(res.authorVoiceChannel!.client.user!);
 
         if (!authorVCperms || !authorVCperms.has("VIEW_CHANNEL")) {
-            await ctx.channel.send(this.utils.embedifyString(ctx.guild, "I don't have permissions to view your channel!", true));
-            return { error: { message: "NO_BOT_PERMS_VIEW_CHANNEL", code: 12 } }
+            await ctx.channel.send(this.utils.embedifyString(ctx.guild, `${await this.utils.getEmoji("voice_channel_icon_error_locked")} I don't have permissions to view your channel!`, true));
+            return new CustomError(12, "NO_BOT_PERMS_VIEW_CHANNEL");
         }
         if (!authorVCperms || !authorVCperms.has("CONNECT")) {
-            await ctx.channel.send(this.utils.embedifyString(ctx.guild, "I don't have permissions to join your channel!", true));
-            return { error: { message: "NO_BOT_PERMS_CONNECT", code: 13 } }
+            await ctx.channel.send(this.utils.embedifyString(ctx.guild, `${await this.utils.getEmoji("voice_channel_icon_error_locked")} I don't have permissions to join your channel!`, true));
+            return new CustomError(13, "NO_BOT_PERMS_CONNECT");
         }
         if (!authorVCperms || !authorVCperms.has("SPEAK")) {
-            await ctx.channel.send(this.utils.embedifyString(ctx.guild, "I don't have permissions to speak in your channel!", true));
-            return { error: { message: "NO_BOT_PERMS_SPEAK", code: 14 } }
+            await ctx.channel.send(this.utils.embedifyString(ctx.guild, `${await this.utils.getEmoji("voice_channel_icon_normal_locked")} I don't have permissions to speak in your channel!`, true));
+            return new CustomError(14, "NO_BOT_PERMS_SPEAK");
         }
 
-        return { authorVoiceChannel: res.authorVoiceChannel }
+        return new Success(0, "SUCCESS", res.authorVoiceChannel);
     }
 }

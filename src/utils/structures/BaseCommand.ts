@@ -25,7 +25,7 @@ export class BaseCommand {
         this.hidden = hidden || false;
         this.globalCTX = GlobalCTX;
     }
-    async run(ctx: CommandCTX, internalCall: boolean = false): Promise<any> { };
+    async run(ctx: CommandCTX, opts?: any): Promise<any> { };
     getUsage(guildPrefix: string): string | void { };
 }
 

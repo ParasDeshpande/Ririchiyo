@@ -24,5 +24,7 @@ export default class ReadyEvent extends BaseEvent {
             }
         }
         presenceUpdater.run();
+
+        this.globalCTX.logger?.info("Client ready!");
     }
 }

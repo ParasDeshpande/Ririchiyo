@@ -1,4 +1,4 @@
-import { Utils as Util } from '../Utils';
+import Utils, { Utils as Util } from '../Utils';
 import { Player, Track } from '6ec0bd7f/dist';
 import { Message, MessageReaction, ReactionCollector, TextChannel, User } from 'discord.js';
 import GlobalCTX from '../GlobalCTX';
@@ -32,6 +32,7 @@ export default class PlayingMessage {
         const permissions = this.player.textChannel.permissionsFor(this.player.textChannel.client.user!);
         if (!permissions?.has("SEND_MESSAGES")) return;
         if (!permissions.has("EMBED_LINKS")) return this.player.textChannel.send(Util.embedifyString(this.player.guild, "I don't have permissions to embed links in this channel!", true)).catch((err: Error) => GlobalCTX.logger?.error(err.message));
+        if (!permissions.has("USE_EXTERNAL_EMOJIS")) return this.player.textChannel.send(Util.embedifyString(this.player.guild, "I don't have permissions to use external emojis in this channel!\nThis permission is required for reaction messages to work correctly", true)).catch((err: Error) => GlobalCTX.logger?.error(err.message));
         if (!permissions.has("USE_EXTERNAL_EMOJIS")) return this.player.textChannel.send(Util.embedifyString(this.player.guild, "I don't have permissions to use external emojis in this channel!\nThe playing message contains emojis from an external server which cannot be sent here without the permission to use external emojis!", true)).catch((err: Error) => GlobalCTX.logger?.error(err.message));
 
         /**
@@ -69,6 +70,7 @@ export default class PlayingMessage {
             const permissions = (reaction.message.channel as TextChannel).permissionsFor(user.client.user!);
             if (!permissions?.has("SEND_MESSAGES")) return;
             if (!permissions.has("EMBED_LINKS")) return this.player.textChannel.send(Util.embedifyString(this.player.guild, "I don't have permissions to embed links in this channel!", true)).catch((err: Error) => GlobalCTX.logger?.error(err.message));
+            if (!permissions.has("USE_EXTERNAL_EMOJIS")) return this.player.textChannel.send(Util.embedifyString(this.player.guild, "I don't have permissions to use external emojis in this channel!\nThis permission is required for reaction messages to work correctly", true)).catch((err: Error) => GlobalCTX.logger?.error(err.message));
             if (!permissions.has("MANAGE_MESSAGES")) return this.player.textChannel.send(Util.embedifyString(this.player.guild, "I don't have permissions to manage messages in this channel!\nThis permission is required for reaction controls to work correctly", true)).catch((err: Error) => GlobalCTX.logger?.error(err.message));
 
             await reaction.users.remove(user).catch((err: Error) => GlobalCTX.logger?.error(err.message));
@@ -80,8 +82,10 @@ export default class PlayingMessage {
         * Reaction emojis add
         */
         for (const option of reactionOptions) {
-            if (this.message && !this.message.deleted) if (!await this.message.react(option).catch((err: Error) => GlobalCTX.logger?.error(err.message))) return;
-            else return;
+            const emoji = await Utils.getEmoji(option);
+            if (!emoji) continue;
+            if (!this.message || this.message.deleted || !await this.message.react(emoji).catch((err: Error) => err.message !== "Unknown Message" ? GlobalCTX.logger?.error(err.message) : undefined)) return;
+
         }
     }
 
@@ -90,7 +94,7 @@ export default class PlayingMessage {
 
         if (this.reactionCollector) this.reactionCollector.stop();
 
-        this.message.delete().catch((err: Error) => GlobalCTX.logger?.error(err.message));
+        if (this.message.deletable && !this.message.deleted) this.message.delete().catch((err: Error) => GlobalCTX.logger?.error(err.message));
         delete this.message;
     }
 }

@@ -9,8 +9,9 @@ const manager = new ShardingManager('src/main/index.js', {
     totalShards: settings.shardingManager.totalShards,
 });
 
-manager.on("shardCreate", async (shard) => {
-    await loader.loadEvents(shard, "src/events/shard")
+manager.on('shardCreate', async (shard) => {
+    await loader.loadEvents(shard, "src/events/shard");
+    //shard.on('')
 });
 
 manager.spawn();

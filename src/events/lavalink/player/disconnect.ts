@@ -9,6 +9,8 @@ export class PlayerDisconnectEvent extends BaseEvent {
         })
     }
     async run(manager: Manager, player: Player, oldChannel: string) {
+        if (player.queue.current) this.globalCTX.playingMessages.deleteMessage(player.queue.current.uuid);
+        await player.textChannel.send(this.utils.embedifyString(player.guild, "I got disconnected from the voice channel!\nCleared the music queue.", false, this.utils.appearance.colours.warn));
         player.destroy();
     };
 }

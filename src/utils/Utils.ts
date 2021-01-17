@@ -11,6 +11,7 @@ import InternalPermissions, { InternalPermissionResolvable } from "../database/u
 import { Player } from "6ec0bd7f/dist";
 import GuildData from "../database/structures/Guild";
 import GuildSettings from "../database/structures/GuildSettings";
+import { Client } from "discord.js";
 
 export type Commands = discord.Collection<BaseCommand["name"], BaseCommand>;
 
@@ -73,7 +74,7 @@ export class MessageParser {
         if (!usedPrefix) return null;
 
         const args = message.content.slice(usedPrefix.length).trim().split(/\s+/);
-        const commandName = args.shift();
+        const commandName = args.shift()?.toLowerCase();
 
         if (!commandName) return null;
 
@@ -165,7 +166,7 @@ export class Utils {
      * @param string The string to limit length of
      * @param opts Options
      */
-    public static limitLength(text: string, { maxLength = 2000, splitAt = '\n', prepend = '', append = '...' }: limitLengthOpts): string {
+    public static limitLength(text: string, { maxLength = 2000, splitAt = '\n', prepend = '', append = '...' }: limitLengthOpts = {}): string {
         if (typeof text !== 'string') throw new TypeError("The provided value for 'text' is not a 'String'");
         if (typeof maxLength !== 'number') throw new TypeError("The provided value for 'maxLength' is not a 'Number'");
         return discord.Util.splitMessage(text, { maxLength, char: splitAt, prepend, append })[0];
@@ -197,11 +198,47 @@ export class Utils {
         const cache = this.emojisCache.get(id);
         if (cache) return cache;
 
-        const emoji = GlobalCTX.client.emojis.cache.get(id) || await broadcastAndFindEmoji(id);
+        const emoji = GlobalCTX.client.emojis.cache.get(id) || await this.broadcastAndFindEmoji(id);
         if (!emoji) return null;
 
         this.emojisCache.set(id, emoji);
         return emoji;
+    }
+
+    /**
+     * Get an emoji on the client and process it for sending through broadcast eval
+     * @param client The client to get the emoji for
+     * @param id the string id of the emoji
+     */
+    public static getToSendEmoji = (client: Client, id: string) => {
+        const temp: discord.GuildEmoji | undefined = client.emojis.cache.get(id);
+        if (!temp) return null;
+
+        const emoji = Object.assign({}, temp);
+        // @ts-expect-error
+        if (emoji.guild) emoji.guild = emoji.guild.id;
+        // @ts-expect-error
+        emoji.require_colons = emoji.requiresColons;
+
+        return emoji;
+    }
+
+    /**
+     * Use broadcast eval to find emoji on other shards
+     * @param id the string id of the emoji
+     */
+    public static async broadcastAndFindEmoji(id: string) {
+        const res = await GlobalCTX.client.shard?.broadcastEval(`(${this.getToSendEmoji}).call(this, this, '${id}')`).catch((err: Error) => GlobalCTX.logger?.error(err.message));
+        if (!res) return null;
+
+        const emojiData = res.find((emoji: any) => emoji);
+        if (!emojiData) return null;
+
+        // @ts-expect-error because api is private
+        const guildData = await GlobalCTX.client.api.guilds(emojiData.guild).get();
+        const guild = new discord.Guild(GlobalCTX.client, guildData);
+
+        return new discord.GuildEmoji(GlobalCTX.client, emojiData, guild);
     }
 }
 
@@ -242,70 +279,87 @@ export class Success {
 }
 
 export class MusicUtil {
+    private static async sendError(message: string, channel: discord.TextChannel) {
+        return await channel.send(Utils.embedifyString(channel.guild, message, true));
+    }
     public static canModifyPlayer(options: CanModifyPlayerOptions): Success | CustomError {
-        const player = GlobalCTX.lavalinkClient.players.get(options.guild.id);
-        const { channel: botVoiceChannel } = options.guild.me?.voice || {};
-        const { channel: authorVoiceChannel } = options.member.voice;
+        const { guild, member, textChannel, memberPermissions, requiredPermissions, vcMemberAmtForAllPerms, noPlayerRequired, isSpawnAttempt, sendError } = Object.assign({ vcMemberAmtForAllPerms: 2, noPlayerRequired: false, isSpawnAttempt: false, sendError: true }, options);
+        const player = GlobalCTX.lavalinkClient.players.get(guild.id);
+        const { channel: botVc } = guild.me?.voice || {};
+        const { channel: memberVc } = member.voice;
 
-        /** If the player is required to run the command and player does not exist */
-        if (options.playerRequired && !player) return new CustomError(1, "NO_PLAYER");
+        if (!noPlayerRequired && !player) {
+            if (sendError) this.sendError("There is nothing playing right now!", textChannel);
+            return new CustomError(1, "NO_PLAYER");
+        }
 
-        if (player && botVoiceChannel) {
-            /** If the author is not in the same voice channel where the player is playing */
-            if (!authorVoiceChannel || authorVoiceChannel.id !== player.voiceChannel?.id) {
-                /** If the author is not in the same voice channel while requesting to spawn the player */
-                if (options.isSpawnAttempt) return new CustomError(2, "PLAYER_ALREADY_EXISTS");
-                /** If the author is not in the same voice channel */
+        if (player && botVc) {
+            if (!memberVc) {
+                if (isSpawnAttempt) {
+                    if (sendError) this.sendError("Already playing in a different channel!", textChannel);
+                    return new CustomError(2, "PLAYER_ALREADY_EXISTS");
+                }
+                if (sendError) this.sendError("You need to be in the same voice channel as the bot to use that command!", textChannel);
                 return new CustomError(3, "NO_AUTHOR_CHANNEL_AND_PLAYER_EXISTS");
             }
-            /** If the author is in the same voice channel as the player */
             else {
-                /** If the author is trying to spawn the player while the player is already in his voice channel and connected */
-                if (options.isSpawnAttempt) return new CustomError(4, "PLAYER_ALREADY_EXISTS_SAME_CHANNEL");
-
-                /** If this is a normal command that the player has requested while all conditions are as they should be */
-                const missingPerms = options.memberPermissions.missing(options.requiredPermissions); //The permissions required which are missing, if not will be an empty array
-                /** If the author has permissions */
-                if (missingPerms.length === 0) return new Success(1, "HAS_PERMS", authorVoiceChannel, player);
-                /** If the author does not have permissions */
+                if (memberVc.id !== botVc.id) {
+                    if (isSpawnAttempt) {
+                        if (sendError) this.sendError("Already playing in a different channel!", textChannel);
+                        return new CustomError(2, "PLAYER_ALREADY_EXISTS");
+                    }
+                    if (sendError) this.sendError("You need to be in the same voice channel as the bot to use that command!", textChannel);
+                    return new CustomError(4, "PLAYER_IN_DIFFERENT_CHANNEL");
+                }
                 else {
-                    const vcMemberAmt = authorVoiceChannel.members.filter(member => !member.user.bot).size; //Amount of members in the author's voice channel
-                    /** If channel members are more than the allowed amount for free permissions */
-                    if (vcMemberAmt > options.vcMemberAmtForAllPerms) return new CustomError(5, "NO_PERMS_AND_NOT_ALONE", missingPerms);
-                    /** If the author has permissions due to the less amount of members in channel */
-                    return new Success(2, "NO_PERMS_AND_ALONE", authorVoiceChannel, player);
+                    if (isSpawnAttempt) {
+                        if (sendError) this.sendError("Already playing in your voice channel!", textChannel);
+                        return new CustomError(5, "PLAYER_ALREADY_EXISTS_SAME_CHANNEL");
+                    }
+                    const vcMemberCount = memberVc.members.filter(m => !m.user.bot).size;
+                    const missingPerms = memberPermissions.missing(requiredPermissions);
+                    const hasPerms = !missingPerms || missingPerms.length === 0;
+                    if (hasPerms) return new Success(1, "HAS_PERMS", memberVc, player);
+                    else {
+                        if (vcMemberCount > vcMemberAmtForAllPerms) {
+                            if (sendError) this.sendError(`You dont have \`${missingPerms.join("`, `")}\` permission${missingPerms.length > 1 ? `s` : ``} to do that!\nBeing alone in the channel works too!`, textChannel);
+                            return new CustomError(6, "NO_PERMS_AND_NOT_ALONE");
+                        }
+                        return new Success(2, "NO_PERMS_AND_ALONE", memberVc, player);
+                    }
                 }
             }
         }
-        /** If the player does not exist and is not required */
         else {
-            const missingPerms = options.memberPermissions.missing(options.requiredPermissions); //The permissions required which are missing, if not will be an empty array
-            /** If the author has the permissions */
-            if (missingPerms.length === 0) {
-                /** If this is a spawn attempt */
-                if (options.isSpawnAttempt) {
-                    /* If the author is not in a voice channel but is trying to summon the player */
-                    if (!authorVoiceChannel) return new CustomError(6, "NO_VOICE_CHANNEL");
-                    return new Success(3, "HAS_PERMS_TO_SPAWN_PLAYER", authorVoiceChannel);
+            const missingPerms = memberPermissions.missing(requiredPermissions);
+            const hasPerms = !missingPerms || missingPerms.length === 0;
+            if (hasPerms) {
+                if (isSpawnAttempt && !memberVc) {
+                    if (sendError) this.sendError("You need to be in a voice channel to use that command!", textChannel);
+                    return new CustomError(7, "NO_VOICE_CHANNEL");
                 }
-                /** If the player is not required and the author has permissions */
-                return new Success(3, "HAS_PERMS_AND_NO_PLAYER");
+                if (isSpawnAttempt) return new Success(3, "HAS_PERMS_TO_SPAWN_PLAYER", memberVc!);
+                return new Success(4, "HAS_PERMS_AND_NO_PLAYER");
             }
-            /** If the author does not have permissions */
             else {
-                /** If the author is trying to summon the player and does not have permissions */
-                if (options.isSpawnAttempt) {
-                    /* If the author is not in a voice channel but is trying to summon the player */
-                    if (!authorVoiceChannel) return new CustomError(6, "NO_VOICE_CHANNEL");
-                    /* If the author is not in a voice channel and is trying to summon the player */
+                if (isSpawnAttempt) {
+                    if (!memberVc) {
+                        if (sendError) this.sendError("You need to be in a voice channel to use that command!", textChannel);
+                        return new CustomError(7, "NO_VOICE_CHANNEL");
+                    }
                     else {
-                        const vcMemberAmt = authorVoiceChannel.members.filter(member => !member.user.bot).size; //Amount of members in the author's voice channel
-                        if (vcMemberAmt > options.vcMemberAmtForAllPerms) return new CustomError(7, "NO_PERMS_TO_SPAWN_PLAYER");
-                        return new Success(4, "NO_PERMS_AND_ALONE", authorVoiceChannel);
+                        const vcMemberCount = memberVc.members.filter(m => !m.user.bot).size;
+                        if (vcMemberCount > vcMemberAmtForAllPerms) {
+                            if (sendError) this.sendError(`You dont have \`${missingPerms.join("`, `")}\` permission${missingPerms.length > 1 ? `s` : ``} to do that!\nBeing alone in the channel works too!`, textChannel);
+                            return new CustomError(8, "NO_PERMS_TO_SPAWN_PLAYER");
+                        }
+                        return new Success(2, "NO_PERMS_AND_ALONE", memberVc);
                     }
                 }
-                /** If the author is trying to access a command but the player is not available */
-                else return new CustomError(1, "NO_PLAYER");
+                else {
+                    if (sendError) this.sendError("There is nothing playing right now!", textChannel);
+                    return new CustomError(9, "NO_PERMS_AND_NO_PLAYER");
+                }
             }
         }
     }
@@ -313,13 +367,13 @@ export class MusicUtil {
 export interface CanModifyPlayerOptions {
     guild: discord.Guild,
     member: discord.GuildMember,
+    textChannel: discord.TextChannel,
     memberPermissions: InternalPermissions,
-    channel: discord.TextChannel,
-    playerRequired: boolean,
     requiredPermissions: InternalPermissionResolvable,
-    sendError: boolean,
-    isSpawnAttempt: boolean,
-    vcMemberAmtForAllPerms: number
+    vcMemberAmtForAllPerms?: number,
+    noPlayerRequired?: boolean,
+    isSpawnAttempt?: boolean,
+    sendError?: boolean
 }
 
 export type CanModifyPlayerResult = {
@@ -340,10 +394,10 @@ export interface EmojisConfig {
 }
 
 interface limitLengthOpts {
-    maxLength: number;
-    splitAt: string;
-    prepend: string;
-    append: string;
+    maxLength?: number;
+    splitAt?: string;
+    prepend?: string;
+    append?: string;
 }
 
 export class Logger {
@@ -401,43 +455,6 @@ export class Logger {
         console.trace(Utils.multiplyString(7, "\b") + this.identifier + chalk.yellowBright(message));
         return;
     }
-}
-
-/**
- * Get an emoji on the client and process it for sending through broadcast eval
- * @param client The client to get the emoji for
- * @param id the string id of the emoji
- */
-export const getToSendEmoji = (client: discord.Client, id: string) => {
-    const temp: discord.GuildEmoji | undefined = client.emojis.cache.get(id);
-    if (!temp) return null;
-
-    const emoji = Object.assign({}, temp);
-    // @ts-expect-error
-    if (emoji.guild) emoji.guild = emoji.guild.id;
-    // @ts-expect-error
-    emoji.require_colons = emoji.requiresColons;
-
-    return emoji;
-}
-
-/**
- * Use broadcast eval to find emoji on other shards
- * @param client The client to get the emoji for
- * @param id the string id of the emoji
- */
-export const broadcastAndFindEmoji = async (id: string) => {
-    const res = await GlobalCTX.client.shard?.broadcastEval(`(${getToSendEmoji}).call(this, this, '${id}')`).catch((err: Error) => GlobalCTX.logger?.error(err.message));
-    if (!res) return null;
-
-    const emojiData = res.find((emoji: any) => emoji);
-    if (!emojiData) return null;
-
-    // @ts-expect-error because api is private
-    const guildData = await client.api.guilds(emojiData.guild).get();
-    const guild = new discord.Guild(GlobalCTX.client, guildData);
-
-    return new discord.GuildEmoji(GlobalCTX.client, emojiData, guild);
 }
 
 export default Utils;
